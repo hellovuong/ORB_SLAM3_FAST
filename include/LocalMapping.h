@@ -28,6 +28,7 @@
 #include "Settings.h"
 
 #include <mutex>
+#define REGISTER_TIMES
 
 
 namespace ORB_SLAM3

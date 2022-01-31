@@ -41,6 +41,7 @@
 
 #include <mutex>
 #include <unordered_set>
+#define REGISTER_TIMES
 
 namespace ORB_SLAM3
 {

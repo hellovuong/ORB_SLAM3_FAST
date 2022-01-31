@@ -1,0 +1,135 @@
+%YAML:1.0
+
+ #--------------------------------------------------------------------------------------------
+ # System config
+ #--------------------------------------------------------------------------------------------
+
+ # When the variables are commented, the system doesn't load a previous session or not store the current one
+
+ # If the LoadFile doesn't exist, the system give a message and create a new Atlas from scratch
+ #System.LoadAtlasFromFile: "Session_MH01_MH02_MH03_Stereo60_Pseudo"
+
+ # The store file is created from the current session, if a file with the same name exists it is deleted
+ #System.SaveAtlasToFile: "Session_MH01_MH02_MH03_Stereo60_Pseudo"
+
+ #--------------------------------------------------------------------------------------------
+ # Camera Parameters. Adjust them!
+ #--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "PinHole"
+
+ # Camera calibration and distortion parameters (OpenCV)
+ # distortion_model: "plumb_bob"
+ # D: [0.0, 0.0, 0.0, 0.0, 0.0]
+ # K: [524.6324462890625, 0.0, 637.4818115234375, 0.0, 524.6324462890625, 347.8766784667969, 0.0, 0.0, 1.0]
+ # R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+ # P: [524.6324462890625, 0.0, 637.4818115234375, 0.0, 0.0, 524.6324462890625, 347.8766784667969, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+#zed2 at lab left height: 720
+#zed2 at lab left width: 1280
+#zed2 at lab left distortion_model: "plumb_bob"
+#zed2 at lab left D: [0.0, 0.0, 0.0, 0.0, 0.0]
+#zed2 at lab left K: [532.03125, 0.0, 639.888671875, 0.0, 532.03125, 356.16241455078125, 0.0, 0.0, 1.0]
+#zed2 at lab left R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+#zed2 at lab left P: [532.03125, 0.0, 639.888671875, 0.0, 0.0, 532.03125, 356.16241455078125, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+Camera1.fx: 532.03125
+Camera1.fy: 532.03125
+Camera1.cx: 639.888671875
+Camera1.cy: 356.16241455078125
+
+# k1, k2, k3, p1, p2.
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
+Camera1.k3: 0.0
+
+# distortion_model: "plumb_bob"
+# D: [0.0, 0.0, 0.0, 0.0, 0.0]
+# K: [524.6324462890625, 0.0, 637.4818115234375, 0.0, 524.6324462890625, 347.8766784667969, 0.0, 0.0, 1.0]
+# R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+# P: [524.6324462890625, 0.0, 637.4818115234375, -62.919593811035156, 0.0, 524.6324462890625, 347.8766784667969, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+#height: 720
+#width: 1280
+#distortion_model: "plumb_bob"
+#D: [0.0, 0.0, 0.0, 0.0, 0.0]
+#K: [532.03125, 0.0, 639.888671875, 0.0, 532.03125, 356.16241455078125, 0.0, 0.0, 1.0]
+#R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+#P: [532.03125, 0.0, 639.888671875, -63.64478302001953, 0.0, 532.03125, 356.16241455078125, 0.0, 0.0, 0.0, 1.0, 0.0]
+
+Camera2.fx: 532.03125
+Camera2.fy: 532.03125
+Camera2.cx: 639.888671875
+Camera2.cy: 356.16241455078125
+
+# k1, k2, k3, p1, p2.
+Camera2.k1: 0.0
+Camera2.k2: 0.0
+Camera2.p1: 0.0
+Camera2.p2: 0.0
+Camera2.k3: 0.0
+
+Camera.width: 1280
+Camera.height: 720
+
+#Camera.newWidth: 640
+#Camera.newHeight: 360
+
+ # Camera frames per second
+Camera.fps: 12
+
+# stereo baseline
+#Stereo.b: 0.12
+
+ # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 35.0 # 35
+
+Stereo.T_c1_c2: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data: [ 1.0,0.0,0.0,0.12,
+          0.0,1.0,0.0,0.00,
+          0.0,0.0,1.0,0.00,
+          0.0,0.0,0.0,1.00]
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 2000 # 500 points for each frame
+                             # 300 points
+# ORB Extractor: Scale factor between levels in the scale pyramid
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#---------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 1.0

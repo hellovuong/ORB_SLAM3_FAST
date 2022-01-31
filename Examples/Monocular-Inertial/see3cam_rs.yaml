@@ -1,0 +1,98 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "KannalaBrandt8"
+
+# Left Camera calibration and distortion parameters (OpenCV)
+Camera1.fx: 344.6001842455168
+Camera1.fy: 344.11246662225366
+Camera1.cx: 943.6544741735924
+Camera1.cy: 594.6954755008205
+
+# Kannala-Brandt distortion parameters
+Camera1.k1: 0.03514948721539231
+Camera1.k2: 0.010827485806785388
+Camera1.k3: 0.006364378968337289
+Camera1.k4: -0.003872282402605128
+
+# Camera resolution
+Camera.width: 1920
+Camera.height: 1200
+
+Camera.newWidth: 960
+Camera.newHeight: 600
+
+# Camera frames per second 
+Camera.fps: 15
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+#   T_cam_imu:
+#      - [0.9988606811245105, 0.011108246193317963, 0.046410629924484754, -0.015313582556824652]
+#      - [-0.016704365176902394, 0.9923908061711777, 0.12198955697499957, -0.09373292054767483]
+#      - [-0.044702392413779525, -0.12262583208047402, 0.9914457127947328, 0.14670705176791007]
+#      - [0.0, 0.0, 0.0, 1.0]
+
+# Transformation from body-frame (imu) to left camera ud7
+IMU.T_b_c1: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+#   data: [  0.99905098, -0.00562434, -0.04319155, 0.01569931254462709,
+#            0.00112888,  0.99463833, -0.10340848, 0.11031105270749214,
+#            0.04354158,  0.10326158,  0.99370075, -0.12455979933009519,
+#            0.0, 0.0, 0.0, 1.0] # from basalt
+   data: [0.9988606811245105, 0.011108246193317963, 0.046410629924484754, -0.015313582556824652,
+         -0.016704365176902394, 0.9923908061711777, 0.12198955697499957, -0.09373292054767483,
+         -0.044702392413779525, -0.12262583208047402, 0.9914457127947328, 0.14670705176791007,
+         0.0, 0.0, 0.0, 1.0] # from kalibr
+
+# Do not insert KFs when recently lost
+IMU.InsertKFsWhenLost: 0
+
+# IMU noise (Use those from VINS-mono)
+IMU.NoiseGyro: 0.000005148030141 # rad/s^0.5
+IMU.NoiseAcc: 0.000066952452471 # m/s^1.5
+IMU.GyroWalk: 0.000000499999999 # rad/s^1.5
+IMU.AccWalk: 0.000099999997474 # m/s^2.5
+IMU.Frequency: 200.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1200 # Tested with 1250
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 2.0

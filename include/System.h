@@ -40,7 +40,7 @@
 #include "ImuTypes.h"
 #include "Settings.h"
 
-
+#define REGISTER_TIMES
 namespace ORB_SLAM3
 {
 
@@ -157,6 +157,8 @@ public:
 
     void SaveTrajectoryEuRoC(const string &filename, Map* pMap);
     void SaveKeyFrameTrajectoryEuRoC(const string &filename, Map* pMap);
+
+    void SaveTrajectoryUZH(const string &filename);
 
     // Save data used for initialization debug
     void SaveDebugData(const int &iniIdx);

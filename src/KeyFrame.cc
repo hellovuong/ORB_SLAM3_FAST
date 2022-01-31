@@ -493,9 +493,10 @@ void KeyFrame::ChangeParent(KeyFrame *pKF)
         cout << "ERROR: Change parent KF, the parent and child are the same KF" << endl;
         throw std::invalid_argument("The parent and child can not be the same");
     }
-
-    mpParent = pKF;
-    pKF->AddChild(this);
+    if(pKF){
+      mpParent = pKF;
+      pKF->AddChild(this);
+    }
 }
 
 set<KeyFrame*> KeyFrame::GetChilds()
