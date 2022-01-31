@@ -1,4 +1,15 @@
 # ORB-SLAM3
+### Custom version January 31st, 2022
+Parallelize ORB feature extraction by TBB library, along with new update in V1.0, the speed is over real-time conversion (30 Fps) in this version.
+
+Tracking timestats in ms (mean$\pm$std) with 1280x720 resolution:
+ORB Extraction: 6.84638$\pm$1.90694
+Stereo Matching: 2.86099$\pm$1.27912
+IMU Preintegration: 0.11672$\pm$0.03330
+Pose Prediction: 0.23835$\pm$1.32881
+LM Track: 10.05147$\pm$3.22556
+New KF decision: 0.08841$\pm$0.08071
+Total Tracking: 20.61754$\pm$4.57071
 
 ### V1.0, December 22th, 2021
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
