@@ -2,21 +2,39 @@
 ### Custom version, January 31st, 2022
 Parallelize ORB feature extraction by TBB library, along with new update in V1.0, the speed is over real-time conversion (50 Fps) with 1280x720 resolution and even faster with EuRoC/TUM-VI in this version.
 
-Tracking timestats in ms (mean$\pm$std) with 1280x720 resolution:
+Tracking timestats in ms (mean$\pm$std) with 640x480 resolution of UZH drone racing dataset:
 
-- ORB Extraction: 6.84638$\pm$1.90694
+- ORB Extraction: 5.84742$\pm$1.75730
 
-- Stereo Matching: 2.86099$\pm$1.27912
+- Stereo Matching: 2.89370$\pm$1.87461
 
-- IMU Preintegration: 0.11672$\pm$0.03330
+- IMU Preintegration: 0.10686$\pm$0.03189
 
-- Pose Prediction: 0.23835$\pm$1.32881
+- Pose Prediction: 0.19649$\pm$0.98790
 
-- LM Track: 10.05147$\pm$3.22556
+- LM Track: 8.74928$\pm$2.66998
 
-- New KF decision: 0.08841$\pm$0.08071
+- New KF decision: 0.06808$\pm$0.05809
 
---->Total Tracking: 20.61754$\pm$4.57071
+--->Total Tracking: 18.11396$\pm$4.65464
+
+Tracking timestats in ms (mean$\pm$std) with 1280X720 resolution of ZED2 camera:
+
+- ORB Extraction: 9.82765$\pm$1.42422
+
+- Stereo Matching: 2.75454$\pm$0.54232
+
+- IMU Preintegration: 0.11304$\pm$0.04803
+
+- Pose Prediction: 0.09251$\pm$0.44835
+
+- LM Track: 5.41081$\pm$1.43957
+
+- New KF decision: 0.13526$\pm$0.24701
+
+--->Total Tracking: 21.25452$\pm$2.58791
+
+
 
 ### V1.0, December 22th, 2021
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
