@@ -124,7 +124,7 @@ add_library(${PROJECT_NAME} SHARED
         include/TwoViewReconstruction.h
         include/SerializationUtils.h
         include/Config.h
-        include/Settings.h)
+        include/Settings.h src/OdomTypes.cpp include/OdomTypes.h)
 
 add_subdirectory(Thirdparty/g2o)
 
@@ -133,7 +133,6 @@ target_link_libraries(${PROJECT_NAME}
         ${EIGEN3_LIBS}
         ${Pangolin_LIBRARIES}
         ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-#        /home/vuong/Code/ros_ws/ORB_SLAM3/Thirdparty/DBoW2/lib/libDBoW2.so
         ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
         -lboost_serialization
         -lcrypto
@@ -169,11 +168,11 @@ add_executable(stereo_inertial_uzh
         Examples/Stereo-Inertial/stereo_intertial_uzh.cpp)
 target_link_libraries(stereo_inertial_uzh ${PROJECT_NAME})
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertial-W)
 
-add_executable(rgbd_zed2
-        Examples/RGB-D/rgbd_zed2.cc)
-target_link_libraries(rgbd_zed2 ${PROJECT_NAME})
+add_executable(stereo_inertial_w_zed2
+        Examples/Stereo-Inertial-W/stereo_inertial_w_zed2.cpp)
+target_link_libraries(stereo_inertial_w_zed2 ${PROJECT_NAME})
 
 # Build examples
 if (BUILD_EXAMPLES)

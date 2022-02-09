@@ -60,18 +60,18 @@ Tracking::Tracking(System* pSys,
       mpKeyFrameDB(pKFDB),
       mbReadyToInitializate(false),
       mpSystem(pSys),
-      mpViewer(NULL),
-      bStepByStep(false),
+      mpViewer(nullptr),
       mpFrameDrawer(pFrameDrawer),
       mpMapDrawer(pMapDrawer),
+      bStepByStep(false),
       mpAtlas(pAtlas),
+      mpLastKeyFrame(static_cast<KeyFrame*>(nullptr)),
       mnLastRelocFrameId(0),
       time_recently_lost(10.0),
+      mnFirstFrameId(0),
       mnInitialFrameId(0),
       mbCreatedMap(false),
-      mnFirstFrameId(0),
-      mpCamera2(nullptr),
-      mpLastKeyFrame(static_cast<KeyFrame*>(NULL)) {
+      mpCamera2(nullptr) {
   // Load camera parameters from settings file
   if (settings) {
     newParameterLoader(settings);

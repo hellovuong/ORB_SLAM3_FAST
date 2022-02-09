@@ -1,5 +1,5 @@
 //
-// Created by vuong on 24/12/2021.
+// Created by vuong on 2/9/22.
 //
 /**
  * This file is part of ORB-SLAM3
@@ -30,20 +30,52 @@
 #include <iostream>
 #include <opencv2/core/core.hpp>
 
-#include "ImuTypes.h"
-
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+/**
+ *   \brief Load Images data function.
+ *
+ *   Function to load image data saved in ASML format
+ *
+ *   \param strPathFolder Path to the folder datasets.
+ *   \param vTimeStamps Vector of timestamp.
+ *   \param vstrImageLeft Vector of left image path.
+ *   \param vstrImageRight Vector of right image path.
+ *   \return Success?
+ *
+ **/
+bool LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+/**
+ *   \brief Load imu data function.
+ *
+ *   Function to load imu data saved in ASML format
+ *
+ *   \param strImuPath Path to the data file.
+ *   \param vTimeStamps Vector of timestamp.
+ *   \param vAcc Vector of accelerator data.
+ *   \param vGyro Vector of gyroscope data.
+ *   \return Success?
+ *
+ **/
+bool LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
+/**
+ *   \brief Load Wheel Odometry data function.
+ *
+ *   Function to load odometry data saved in be2r format:
+ *   #timestamp[ns] tx[m] ty[m] tz[m] qx qy qz qw
+ *
+ *   \param strOdomPath Path to the data.
+ *   \param vTimeStamps Vector of timestamp.
+ *   \param vOdom Vector of data [t_x, t_y, r_z]
+ *   \return Success?
+ *
+ **/
+bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
+              vector<Eigen::Vector3d>& vOdom);
 int main(int argc, char** argv) {
   if (argc < 4) {
     cerr << endl
@@ -66,59 +98,84 @@ int main(int argc, char** argv) {
 
   // Load all sequences:
   int seq;
-  vector<vector<string> > vstrImageLeft;
-  vector<vector<string> > vstrImageRight;
-  vector<vector<double> > vTimestampsCam;
-  vector<vector<cv::Point3f> > vAcc, vGyro;
-  vector<vector<double> > vTimestampsImu;
-  vector<int> nImages;
-  vector<int> nImu;
+  vector<vector<string>> vstrImageLeft;
+  vector<vector<string>> vstrImageRight;
+  vector<vector<double>> vTimestampsCam;
+
+  vector<vector<cv::Point3f>> vAcc, vGyro;
+  vector<vector<double>> vTimestampsImu;
+
+  vector<vector<Eigen::Vector3d>> vOdom;
+  vector<vector<double>> vTimestampsOdom;
+
+  vector<int> vnImages;
+  vector<int> vnImu;
+  vector<int> vnOdom;
   vector<int> first_imu(num_seq, 0);
+  vector<int> first_odom(num_seq, 0);
 
   vstrImageLeft.resize(num_seq);
   vstrImageRight.resize(num_seq);
   vTimestampsCam.resize(num_seq);
+  vnImages.resize(num_seq);
+
   vAcc.resize(num_seq);
   vGyro.resize(num_seq);
   vTimestampsImu.resize(num_seq);
-  nImages.resize(num_seq);
-  nImu.resize(num_seq);
+  vnImu.resize(num_seq);
+
+  vOdom.resize(num_seq);
+  vTimestampsOdom.resize(num_seq);
+  vnOdom.resize(num_seq);
 
   int tot_images = 0;
-  for (seq = 0; seq < num_seq; seq++) {
+
+  for (int i = 0; i < num_seq; ++i) {
     cout << "Loading images for sequence " << seq << "...";
 
     string pathSeq(argv[(2 * seq) + 3]);
 
     string pathImu = pathSeq + "/zed2_imu.txt";
 
-    LoadImages(pathSeq, vstrImageLeft[seq], vstrImageRight[seq],
-               vTimestampsCam[seq]);
-    cout << "LOADED!" << endl;
+    string pathOdom = pathSeq + "/odom.txt";
 
-    cout << "Loading IMU for sequence " << seq << "...";
-    LoadIMU(pathImu, vTimestampsImu[seq], vAcc[seq], vGyro[seq]);
-    cout << "LOADED!" << endl;
+    cout << "Loading Images for sequence " << seq << "...\n";
+    bool bLoadImages = LoadImages(pathSeq, vstrImageLeft[seq],
+                                  vstrImageRight[seq], vTimestampsCam[seq]);
 
-    if (vstrImageLeft[seq].size() != vstrImageRight[seq].size()) {
-      cerr << "ERROR: Failed to load images" << seq << endl;
+    cout << "Loading IMU for sequence " << seq << "...\n";
+    bool bLoadIMU =
+        LoadIMU(pathImu, vTimestampsImu[seq], vAcc[seq], vGyro[seq]);
+
+    cout << "Loading WOdometry for sequence " << seq << "...\n";
+    bool bLoadOdom = LoadOdom(pathOdom, vTimestampsOdom[seq], vOdom[seq]);
+
+    if (!(bLoadImages && bLoadIMU && bLoadOdom)) {
+      std::cerr << "ERROR: Fail to load data" << seq << std::endl;
       return EXIT_FAILURE;
     }
 
-    nImages[seq] = vstrImageLeft[seq].size();
-    tot_images += nImages[seq];
-    nImu[seq] = vTimestampsImu[seq].size();
-
-    if ((nImages[seq] <= 0) || (nImu[seq] <= 0)) {
-      cerr << "ERROR: Failed to load images or IMU for sequence" << seq << endl;
-      return 1;
+    if (vstrImageLeft[seq].size() != vstrImageRight[seq].size()) {
+      cerr << "ERROR: Left and Right image is not equal" << seq << endl;
+      return EXIT_FAILURE;
     }
 
-    // Find first imu to be considered, supposing imu measurements start first
+    tot_images += vnImages[seq];
+
+    vnImages[seq] = (int)vstrImageLeft[seq].size();
+    vnImu[seq] = (int)vTimestampsImu[seq].size();
+    vnOdom[seq] = (int)vTimestampsOdom[seq].size();
+
+    // Find first imu && odom to be considered, supposing imu measurements start
+    // first
 
     while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][0])
       first_imu[seq]++;
     first_imu[seq]--;  // first imu measurement to be considered
+
+    while (vTimestampsOdom[seq][first_odom[seq]] <= vTimestampsCam[seq][0])
+      first_odom[seq]++;
+    first_odom[seq]--;  // first odom measurement to be considered
   }
 
   // Read rectification parameters
@@ -129,7 +186,7 @@ int main(int argc, char** argv) {
   }
 
   // Vector for tracking time statistics
-  vector<float> vTimesTrack;
+  vector<double> vTimesTrack;
   vTimesTrack.resize(tot_images);
 
   cout << endl << "-------" << endl;
@@ -146,8 +203,9 @@ int main(int argc, char** argv) {
     double t_track = 0.f;
     // Seq loop
     vector<ORB_SLAM3::IMU::Point> vImuMeas;
+    vector<ORB_SLAM3::ODOM::Meas> vOdomMeas;
     int proccIm = 0;
-    for (int ni = 0; ni < nImages[seq]; ni++, proccIm++) {
+    for (int ni = 0; ni < vnImages[seq]; ni++, proccIm++) {
       // Read left and right images from file
       imLeft = cv::imread(vstrImageLeft[seq][ni], cv::IMREAD_UNCHANGED);
       imRight = cv::imread(vstrImageRight[seq][ni], cv::IMREAD_UNCHANGED);
@@ -156,14 +214,14 @@ int main(int argc, char** argv) {
         cerr << endl
              << "Failed to load image at: " << string(vstrImageLeft[seq][ni])
              << endl;
-        return 1;
+        return EXIT_FAILURE;
       }
 
       if (imRight.empty()) {
         cerr << endl
              << "Failed to load image at: " << string(vstrImageRight[seq][ni])
              << endl;
-        return 1;
+        return EXIT_FAILURE;
       }
 
       double tframe = vTimestampsCam[seq][ni];
@@ -171,7 +229,7 @@ int main(int argc, char** argv) {
       // Load imu measurements from previous frame
       vImuMeas.clear();
 
-      if (ni > 0)
+      if (ni > 0) {
         while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][ni]) {
           vImuMeas.push_back(ORB_SLAM3::IMU::Point(
               vAcc[seq][first_imu[seq]].x, vAcc[seq][first_imu[seq]].y,
@@ -180,6 +238,14 @@ int main(int argc, char** argv) {
               vTimestampsImu[seq][first_imu[seq]]));
           first_imu[seq]++;
         }
+        while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][ni]) {
+          vOdomMeas.push_back(ORB_SLAM3::ODOM::Meas(
+              vOdom[seq][first_odom[seq]][0], vOdom[seq][first_odom[seq]][1],
+              vOdom[seq][first_odom[seq]][2],
+              vTimestampsOdom[seq][first_odom[seq]]));
+          first_odom[seq]++;
+        }
+      }
 
 #ifdef COMPILEDWITHC11
       std::chrono::steady_clock::time_point t1 =
@@ -200,27 +266,26 @@ int main(int argc, char** argv) {
 #endif
 
 #ifdef REGISTER_TIMES
-      t_track = t_rect + t_resize +
-                std::chrono::duration_cast<
-                    std::chrono::duration<double, std::milli> >(t2 - t1)
-                    .count();
+      t_track =
+          t_rect + t_resize +
+          std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(
+              t2 - t1)
+              .count();
       SLAM.InsertTrackTime(t_track);
 #endif
 
       double ttrack =
-          std::chrono::duration_cast<std::chrono::duration<double> >(t2 - t1)
+          std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1)
               .count();
 
-      // vTimesTrack[ni] = ttrack;
+      //       Wait to load the next frame
+      double T = 0;
+      if (ni < vnImages[seq] - 1)
+        T = vTimestampsCam[seq][ni + 1] - tframe;
+      else if (ni > 0)
+        T = tframe - vTimestampsCam[seq][ni - 1];
 
-      // Wait to load the next frame
-      // double T = 0;
-      // if (ni < nImages[seq] - 1)
-      //   T = vTimestampsCam[seq][ni + 1] - tframe;
-      // else if (ni > 0)
-      //   T = tframe - vTimestampsCam[seq][ni - 1];
-
-      // if (ttrack < T) usleep((T - ttrack) * 1e6);  // 1e6
+      if (ttrack < T) usleep((unsigned int)((T - ttrack) * 1e6));  // 1e6
     }
     std::cout << "Finish seq " << std::endl;
     if (seq < num_seq - 1) {
@@ -249,16 +314,17 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+bool LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/zed2_left.txt";
   string strPathTimesRight = strPathFolder + "/zed2_right.txt";
   fTimes.open(strPathTimesLeft.c_str());
-  fTimes.good() ? std::cout << "Left timestamp path exist\n"
-                : std::cerr << "Left timestamp path doesn't exist\n";
+
+  if (!fTimes.good()) {
+    std::cerr << "Left timestamp path doesn't exist\n";
+    return false;
+  }
   vTimeStamps.reserve(5000);
   vstrImageLeft.reserve(5000);
   vstrImageRight.reserve(5000);
@@ -279,8 +345,12 @@ void LoadImages(const string& strPathFolder,
   }
   fTimes.close();
   fTimes.open(strPathTimesRight.c_str());
-  fTimes.good() ? std::cout << "Right timestamp path exist\n"
-                : std::cerr << "Right timestamp path doesn't exist\n";
+
+  if (!fTimes.good()) {
+    std::cerr << "Right timestamp path doesn't exist\n";
+    return false;
+  }
+
   while (!fTimes.eof()) {
     string s;
     getline(fTimes, s);
@@ -296,19 +366,20 @@ void LoadImages(const string& strPathFolder,
       vstrImageRight.push_back(strPathFolder + "/" + strRight);
     }
   }
+  return true;
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+bool LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);
   vAcc.reserve(5000);
   vGyro.reserve(5000);
-  fImu.good() ? std::cout << "IMU path exist\n"
-              : std::cerr << "IMU path doesn't exist\n";
+  if (!fImu.good()) {
+    std::cerr << "IMU data path doesn't exist\n";
+    return false;
+  }
   while (!fImu.eof()) {
     string s;
     getline(fImu, s);
@@ -332,4 +403,44 @@ void LoadIMU(const string& strImuPath,
       vGyro.push_back(cv::Point3f(data[1], data[2], data[3]));
     }
   }
+  return true;
+}
+
+bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
+              vector<Eigen::Vector3d>& vOdom) {
+  ifstream fOdom;
+  fOdom.open(strOdomPath.c_str());
+  vTimeStamps.reserve(5000);
+  vOdom.reserve(5000);
+  if (!fOdom.good()) {
+    std::cerr << "IMU data path doesn't exist\n";
+    return false;
+  }
+
+  while (!fOdom.eof()) {
+    string s;
+    getline(fOdom, s);
+    if (s[0] == '#') continue;
+    double data[8];
+    if (!s.empty()) {
+      stringstream ss;
+      ss << s;
+      ss >> data[0];  // time
+      ss >> data[1];  // trans_x
+      ss >> data[2];  // trans_y
+      ss >> data[3];  // trans_z
+      ss >> data[4];  // q_x
+      ss >> data[5];  // q_y
+      ss >> data[6];  // q_z
+      ss >> data[7];  // q_w
+    }
+    vTimeStamps.push_back(data[0]);
+    Eigen::Quaterniond Q(data[7], data[4], data[5], data[6]);
+    double yaw = Q.toRotationMatrix().eulerAngles(2, 1, 0)[0];
+    Eigen::Vector3d meas;
+    meas << data[1], data[2], yaw;
+    vOdom.push_back(meas);
+  }
+
+  return true;
 }
