@@ -111,8 +111,10 @@ int main(int argc, char** argv) {
   vector<int> vnImages;
   vector<int> vnImu;
   vector<int> vnOdom;
+
   vector<int> first_imu(num_seq, 0);
   vector<int> first_odom(num_seq, 0);
+  vector<int> first_image(num_seq, 0);
 
   vstrImageLeft.resize(num_seq);
   vstrImageRight.resize(num_seq);
@@ -166,14 +168,23 @@ int main(int argc, char** argv) {
     vnImu[seq] = (int)vTimestampsImu[seq].size();
     vnOdom[seq] = (int)vTimestampsOdom[seq].size();
 
+    // Find the first image where have Odom and IMU
+    while (vTimestampsCam[seq][first_image[seq]] <=
+               vTimestampsImu[seq][first_imu[seq]] ||
+           vTimestampsCam[seq][first_image[seq]] <=
+               vTimestampsOdom[seq][first_odom[seq]])
+      first_image[seq]++;
+
     // Find first imu && odom to be considered, supposing imu measurements start
     // first
 
-    while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][0])
+    while (vTimestampsImu[seq][first_imu[seq]] <=
+           vTimestampsCam[seq][first_image[seq]])
       first_imu[seq]++;
     first_imu[seq]--;  // first imu measurement to be considered
 
-    while (vTimestampsOdom[seq][first_odom[seq]] <= vTimestampsCam[seq][0])
+    while (vTimestampsOdom[seq][first_odom[seq]] <=
+           vTimestampsCam[seq][first_image[seq]])
       first_odom[seq]++;
     first_odom[seq]--;  // first odom measurement to be considered
   }
@@ -194,7 +205,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO,
+                         false);
 
   cv::Mat imLeft, imRight;
   for (seq = 0; seq < num_seq; seq++) {
@@ -205,7 +217,7 @@ int main(int argc, char** argv) {
     vector<ORB_SLAM3::IMU::Point> vImuMeas;
     vector<ORB_SLAM3::ODOM::Meas> vOdomMeas;
     int proccIm = 0;
-    for (int ni = 0; ni < vnImages[seq]; ni++, proccIm++) {
+    for (int ni = first_image[seq]; ni < vnImages[seq]; ni++, proccIm++) {
       // Read left and right images from file
       imLeft = cv::imread(vstrImageLeft[seq][ni], cv::IMREAD_UNCHANGED);
       imRight = cv::imread(vstrImageRight[seq][ni], cv::IMREAD_UNCHANGED);
@@ -238,7 +250,8 @@ int main(int argc, char** argv) {
               vTimestampsImu[seq][first_imu[seq]]));
           first_imu[seq]++;
         }
-        while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][ni]) {
+        while (vTimestampsOdom[seq][first_odom[seq]] <=
+               vTimestampsCam[seq][ni]) {
           vOdomMeas.push_back(ORB_SLAM3::ODOM::Meas(
               vOdom[seq][first_odom[seq]][0], vOdom[seq][first_odom[seq]][1],
               vOdom[seq][first_odom[seq]][2],
@@ -255,7 +268,7 @@ int main(int argc, char** argv) {
           std::chrono::monotonic_clock::now();
 #endif
       // Pass the images to the SLAM system
-      SLAM.TrackStereo(imLeft, imRight, tframe, vImuMeas);
+      SLAM.TrackStereo(imLeft, imRight, tframe, vImuMeas, vOdomMeas);
 
 #ifdef COMPILEDWITHC11
       std::chrono::steady_clock::time_point t2 =
