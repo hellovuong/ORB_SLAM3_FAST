@@ -64,7 +64,7 @@ bool TwoViewReconstruction::Reconstruct(const std::vector<cv::KeyPoint>& vKeys1,
       mvbMatched1[i] = false;
   }
 
-  const int N = mvMatches12.size();
+  const size_t N = mvMatches12.size();
 
   // Indices for minimum set selection
   vector<size_t> vAllIndices;
@@ -140,7 +140,7 @@ void TwoViewReconstruction::FindHomography(vector<bool>& vbMatchesInliers,
                                            float& score,
                                            Eigen::Matrix3f& H21) {
   // Number of putative matches
-  const int N = mvMatches12.size();
+  const size_t N = mvMatches12.size();
 
   // Normalize coordinates
   vector<cv::Point2f> vPn1, vPn2;
@@ -489,8 +489,8 @@ bool TwoViewReconstruction::ReconstructF(vector<bool>& vbMatchesInliers,
                                          float minParallax,
                                          int minTriangulated) {
   int N = 0;
-  for (size_t i = 0, iend = vbMatchesInliers.size(); i < iend; i++)
-    if (vbMatchesInliers[i]) N++;
+  for (auto vbMatchesInlier : vbMatchesInliers)
+    if (vbMatchesInlier) N++;
 
   // Compute Essential Matrix from Fundamental Matrix
   Eigen::Matrix3f E21 = K.transpose() * F21 * K;

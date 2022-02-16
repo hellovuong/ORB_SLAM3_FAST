@@ -146,18 +146,11 @@ Frame::Frame(const Frame& frame)
 #endif
 }
 
-Frame::Frame(const cv::Mat& imLeft,
-             const cv::Mat& imRight,
-             const double& timeStamp,
-             ORBextractor* extractorLeft,
-             ORBextractor* extractorRight,
-             ORBVocabulary* voc,
-             cv::Mat& K,
-             cv::Mat& distCoef,
-             const float& bf,
-             const float& thDepth,
-             GeometricCamera* pCamera,
-             Frame* pPrevF,
+Frame::Frame(const cv::Mat& imLeft, const cv::Mat& imRight,
+             const double& timeStamp, ORBextractor* extractorLeft,
+             ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat& K,
+             cv::Mat& distCoef, const float& bf, const float& thDepth,
+             GeometricCamera* pCamera, Frame* pPrevF,
              const IMU::Calib& ImuCalib)
     : mpcpi(NULL),
       mpORBvocabulary(voc),
@@ -278,17 +271,10 @@ Frame::Frame(const cv::Mat& imLeft,
   AssignFeaturesToGrid();
 }
 
-Frame::Frame(const cv::Mat& imGray,
-             const cv::Mat& imDepth,
-             const double& timeStamp,
-             ORBextractor* extractor,
-             ORBVocabulary* voc,
-             cv::Mat& K,
-             cv::Mat& distCoef,
-             const float& bf,
-             const float& thDepth,
-             GeometricCamera* pCamera,
-             Frame* pPrevF,
+Frame::Frame(const cv::Mat& imGray, const cv::Mat& imDepth,
+             const double& timeStamp, ORBextractor* extractor,
+             ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
+             const float& thDepth, GeometricCamera* pCamera, Frame* pPrevF,
              const IMU::Calib& ImuCalib)
     : mpcpi(NULL),
       mpORBvocabulary(voc),
@@ -396,16 +382,10 @@ Frame::Frame(const cv::Mat& imGray,
   AssignFeaturesToGrid();
 }
 
-Frame::Frame(const cv::Mat& imGray,
-             const double& timeStamp,
-             ORBextractor* extractor,
-             ORBVocabulary* voc,
-             GeometricCamera* pCamera,
-             cv::Mat& distCoef,
-             const float& bf,
-             const float& thDepth,
-             Frame* pPrevF,
-             const IMU::Calib& ImuCalib)
+Frame::Frame(const cv::Mat& imGray, const double& timeStamp,
+             ORBextractor* extractor, ORBVocabulary* voc,
+             GeometricCamera* pCamera, cv::Mat& distCoef, const float& bf,
+             const float& thDepth, Frame* pPrevF, const IMU::Calib& ImuCalib)
     : mpcpi(NULL),
       mpORBvocabulary(voc),
       mpORBextractorLeft(extractor),
@@ -698,9 +678,7 @@ bool Frame::isInFrustum(MapPoint* pMP, float viewingCosLimit) {
   }
 }
 
-bool Frame::ProjectPointDistort(MapPoint* pMP,
-                                cv::Point2f& kp,
-                                float& u,
+bool Frame::ProjectPointDistort(MapPoint* pMP, cv::Point2f& kp, float& u,
                                 float& v) {
   // 3D in absolute coordinates
   Eigen::Vector3f P = pMP->GetWorldPos();
@@ -762,10 +740,8 @@ Eigen::Vector3f Frame::inRefCoordinates(Eigen::Vector3f pCw) {
   return mRcw * pCw + mtcw;
 }
 
-vector<size_t> Frame::GetFeaturesInArea(const float& x,
-                                        const float& y,
-                                        const float& r,
-                                        const int minLevel,
+vector<size_t> Frame::GetFeaturesInArea(const float& x, const float& y,
+                                        const float& r, const int minLevel,
                                         const int maxLevel,
                                         const bool bRight) const {
   vector<size_t> vIndices;
@@ -866,12 +842,8 @@ void Frame::UndistortKeyPoints() {
 
   // Undistort points
   mat = mat.reshape(2);
-  cv::undistortPoints(mat,
-                      mat,
-                      static_cast<Pinhole*>(mpCamera)->toK(),
-                      mDistCoef,
-                      cv::Mat(),
-                      mK);
+  cv::undistortPoints(mat, mat, static_cast<Pinhole*>(mpCamera)->toK(),
+                      mDistCoef, cv::Mat(), mK);
   mat = mat.reshape(1);
 
   // Fill undistorted keypoint vector
@@ -897,12 +869,8 @@ void Frame::ComputeImageBounds(const cv::Mat& imLeft) {
     mat.at<float>(3, 1) = imLeft.rows;
 
     mat = mat.reshape(2);
-    cv::undistortPoints(mat,
-                        mat,
-                        static_cast<Pinhole*>(mpCamera)->toK(),
-                        mDistCoef,
-                        cv::Mat(),
-                        mK);
+    cv::undistortPoints(mat, mat, static_cast<Pinhole*>(mpCamera)->toK(),
+                        mDistCoef, cv::Mat(), mK);
     mat = mat.reshape(1);
 
     // Undistort corners
@@ -1127,22 +1095,15 @@ void Frame::setIntegrated() {
   mbImuPreintegrated = true;
 }
 
-Frame::Frame(const cv::Mat& imLeft,
-             const cv::Mat& imRight,
-             const double& timeStamp,
-             ORBextractor* extractorLeft,
-             ORBextractor* extractorRight,
-             ORBVocabulary* voc,
-             cv::Mat& K,
-             cv::Mat& distCoef,
-             const float& bf,
-             const float& thDepth,
-             GeometricCamera* pCamera,
-             GeometricCamera* pCamera2,
-             Sophus::SE3f& Tlr,
-             Frame* pPrevF,
-             const IMU::Calib& ImuCalib)
-    : mpcpi(NULL),
+Frame::Frame(const cv::Mat& imLeft, const cv::Mat& imRight,
+             const double& timeStamp, ORBextractor* extractorLeft,
+             ORBextractor* extractorRight, ORBVocabulary* voc, cv::Mat& K,
+             cv::Mat& distCoef, const float& bf, const float& thDepth,
+             GeometricCamera* pCamera, GeometricCamera* pCamera2,
+             Sophus::SE3f& Tlr, Frame* pPrevF, const IMU::Calib& ImuCalib)
+    : mpcpi(nullptr),
+      mbHasPose(false),
+      mbHasVelocity(false),
       mpORBvocabulary(voc),
       mpORBextractorLeft(extractorLeft),
       mpORBextractorRight(extractorRight),
@@ -1153,17 +1114,15 @@ Frame::Frame(const cv::Mat& imLeft,
       mbf(bf),
       mThDepth(thDepth),
       mImuCalib(ImuCalib),
-      mpImuPreintegrated(NULL),
+      mpImuPreintegrated(nullptr),
+      mpOdomPreintegrated(nullptr),
       mpPrevFrame(pPrevF),
-      mpImuPreintegratedFrame(NULL),
-      mpReferenceKF(static_cast<KeyFrame*>(NULL)),
+      mpImuPreintegratedFrame(nullptr),
+      mpOdomPreintegratedFrame(nullptr),
+      mpReferenceKF(static_cast<KeyFrame*>(nullptr)),
       mbImuPreintegrated(false),
       mpCamera(pCamera),
-      mpCamera2(pCamera2),
-      mbHasPose(false),
-      mbHasVelocity(false)
-
-{
+      mpCamera2(pCamera2) {
   imgLeft = imLeft.clone();
   imgRight = imRight.clone();
 
@@ -1184,16 +1143,10 @@ Frame::Frame(const cv::Mat& imLeft,
   std::chrono::steady_clock::time_point time_StartExtORB =
       std::chrono::steady_clock::now();
 #endif
-  thread threadLeft(&Frame::ExtractORB,
-                    this,
-                    0,
-                    imLeft,
+  thread threadLeft(&Frame::ExtractORB, this, 0, imLeft,
                     static_cast<KannalaBrandt8*>(mpCamera)->mvLappingArea[0],
                     static_cast<KannalaBrandt8*>(mpCamera)->mvLappingArea[1]);
-  thread threadRight(&Frame::ExtractORB,
-                     this,
-                     1,
-                     imRight,
+  thread threadRight(&Frame::ExtractORB, this, 1, imRight,
                      static_cast<KannalaBrandt8*>(mpCamera2)->mvLappingArea[0],
                      static_cast<KannalaBrandt8*>(mpCamera2)->mvLappingArea[1]);
   threadLeft.join();
@@ -1297,8 +1250,7 @@ void Frame::ComputeStereoFishEyeMatches() {
 
   // Check matches using Lowe's ratio
   for (vector<vector<cv::DMatch>>::iterator it = matches.begin();
-       it != matches.end();
-       ++it) {
+       it != matches.end(); ++it) {
     if ((*it).size() >= 2 && (*it)[0].distance < (*it)[1].distance * 0.7) {
       // For every good match, check parallax and reprojection error to discard
       // spurious matches
@@ -1309,14 +1261,9 @@ void Frame::ComputeStereoFishEyeMatches() {
           sigma2 =
               mvLevelSigma2[mvKeysRight[(*it)[0].trainIdx + monoRight].octave];
       float depth = static_cast<KannalaBrandt8*>(mpCamera)->TriangulateMatches(
-          mpCamera2,
-          mvKeys[(*it)[0].queryIdx + monoLeft],
-          mvKeysRight[(*it)[0].trainIdx + monoRight],
-          mRlr,
-          mtlr,
-          sigma1,
-          sigma2,
-          p3D);
+          mpCamera2, mvKeys[(*it)[0].queryIdx + monoLeft],
+          mvKeysRight[(*it)[0].trainIdx + monoRight], mRlr, mtlr, sigma1,
+          sigma2, p3D);
       if (depth > 0.0001f) {
         mvLeftToRightMatch[(*it)[0].queryIdx + monoLeft] =
             (*it)[0].trainIdx + monoRight;
@@ -1330,8 +1277,7 @@ void Frame::ComputeStereoFishEyeMatches() {
   }
 }
 
-bool Frame::isInFrustumChecks(MapPoint* pMP,
-                              float viewingCosLimit,
+bool Frame::isInFrustumChecks(MapPoint* pMP, float viewingCosLimit,
                               bool bRight) {
   // 3D in absolute coordinates
   Eigen::Vector3f P = pMP->GetWorldPos();

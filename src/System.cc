@@ -28,12 +28,10 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/xml_iarchive.hpp>
-#include <boost/archive/xml_oarchive.hpp>
 #include <boost/serialization/base_object.hpp>
-#include <boost/serialization/string.hpp>
 #include <iomanip>
 #include <thread>
+#include <utility>
 
 #include "Converter.h"
 
@@ -41,14 +39,11 @@ namespace ORB_SLAM3 {
 
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
-System::System(const string& strVocFile,
-               const string& strSettingsFile,
-               const eSensor sensor,
-               const bool bUseViewer,
-               const int initFr,
+System::System(const string& strVocFile, const string& strSettingsFile,
+               const eSensor sensor, const bool bUseViewer, const int initFr,
                const string& strSequence)
     : mSensor(sensor),
-      mpViewer(static_cast<Viewer*>(NULL)),
+      mpViewer(static_cast<Viewer*>(nullptr)),
       mbReset(false),
       mbResetActiveMap(false),
       mbActivateLocalizationMode(false),
@@ -198,24 +193,15 @@ System::System(const string& strVocFile,
 
   // Initialize the Tracking thread
   //(it will live in the main thread of execution, the one that called this
-  //constructor)
+  // constructor)
   cout << "Seq. Name: " << strSequence << endl;
-  mpTracker = new Tracking(this,
-                           mpVocabulary,
-                           mpFrameDrawer,
-                           mpMapDrawer,
-                           mpAtlas,
-                           mpKeyFrameDatabase,
-                           strSettingsFile,
-                           mSensor,
-                           settings_,
-                           strSequence);
+  mpTracker = new Tracking(this, mpVocabulary, mpFrameDrawer, mpMapDrawer,
+                           mpAtlas, mpKeyFrameDatabase, strSettingsFile,
+                           mSensor, settings_, strSequence);
 
   // Initialize the Local Mapping thread and launch
   mpLocalMapper = new LocalMapping(
-      this,
-      mpAtlas,
-      mSensor == MONOCULAR || mSensor == IMU_MONOCULAR,
+      this, mpAtlas, mSensor == MONOCULAR || mSensor == IMU_MONOCULAR,
       mSensor == IMU_MONOCULAR || mSensor == IMU_STEREO || mSensor == IMU_RGBD,
       strSequence);
   mptLocalMapping = new thread(&ORB_SLAM3::LocalMapping::Run, mpLocalMapper);
@@ -233,9 +219,7 @@ System::System(const string& strVocFile,
 
   // Initialize the Loop Closing thread and launch
   //  mSensor!=MONOCULAR && mSensor!=IMU_MONOCULAR
-  mpLoopCloser = new LoopClosing(mpAtlas,
-                                 mpKeyFrameDatabase,
-                                 mpVocabulary,
+  mpLoopCloser = new LoopClosing(mpAtlas, mpKeyFrameDatabase, mpVocabulary,
                                  mSensor != MONOCULAR,
                                  activeLC);  // mSensor!=MONOCULAR);
   mptLoopClosing = new thread(&ORB_SLAM3::LoopClosing::Run, mpLoopCloser);
@@ -256,12 +240,8 @@ System::System(const string& strVocFile,
   if (bUseViewer)
   // if(false) // TODO
   {
-    mpViewer = new Viewer(this,
-                          mpFrameDrawer,
-                          mpMapDrawer,
-                          mpTracker,
-                          strSettingsFile,
-                          settings_);
+    mpViewer = new Viewer(this, mpFrameDrawer, mpMapDrawer, mpTracker,
+                          strSettingsFile, settings_);
     mptViewer = new thread(&Viewer::Run, mpViewer);
     mpTracker->SetViewer(mpViewer);
     mpLoopCloser->mpViewer = mpViewer;
@@ -272,10 +252,10 @@ System::System(const string& strVocFile,
   Verbose::SetTh(Verbose::VERBOSITY_QUIET);
 }
 
-Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft,
-                                 const cv::Mat& imRight,
+Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft, const cv::Mat& imRight,
                                  const double& timestamp,
                                  const vector<IMU::Point>& vImuMeas,
+                                 const vector<ODOM::Meas>& vOdomMeas,
                                  string filename) {
   if (mSensor != STEREO && mSensor != IMU_STEREO) {
     cerr << "ERROR: you called TrackStereo but input sensor was not set to "
@@ -336,14 +316,13 @@ Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft,
   }
 
   if (mSensor == System::IMU_STEREO)
-    for (size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
-      mpTracker->GrabImuData(vImuMeas[i_imu]);
+    for (const auto& vImuMea : vImuMeas) mpTracker->GrabImuData(vImuMea);
 
-  // std::cout << "start GrabImageStereo" << std::endl;
-  Sophus::SE3f Tcw = mpTracker->GrabImageStereo(
-      imLeftToFeed, imRightToFeed, timestamp, filename);
+  if (mSensor == System::IMU_STEREO && !vOdomMeas.empty())
+    for (const auto& vOdomMea : vOdomMeas) mpTracker->GrabOdomData(vOdomMea);
 
-  // std::cout << "out grabber" << std::endl;
+  Sophus::SE3f Tcw = mpTracker->GrabImageStereo(imLeftToFeed, imRightToFeed,
+                                                timestamp, std::move(filename));
 
   unique_lock<mutex> lock2(mMutexState);
   mTrackingState = mpTracker->mState;
@@ -353,8 +332,7 @@ Sophus::SE3f System::TrackStereo(const cv::Mat& imLeft,
   return Tcw;
 }
 
-Sophus::SE3f System::TrackRGBD(const cv::Mat& im,
-                               const cv::Mat& depthmap,
+Sophus::SE3f System::TrackRGBD(const cv::Mat& im, const cv::Mat& depthmap,
                                const double& timestamp,
                                const vector<IMU::Point>& vImuMeas,
                                string filename) {
@@ -422,8 +400,7 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat& im,
   return Tcw;
 }
 
-Sophus::SE3f System::TrackMonocular(const cv::Mat& im,
-                                    const double& timestamp,
+Sophus::SE3f System::TrackMonocular(const cv::Mat& im, const double& timestamp,
                                     const vector<IMU::Point>& vImuMeas,
                                     string filename) {
   {
@@ -535,13 +512,12 @@ void System::Shutdown() {
 
   mpLocalMapper->RequestFinish();
   mpLoopCloser->RequestFinish();
-  /*if(mpViewer)
+  if(mpViewer)
   {
       mpViewer->RequestFinish();
       while(!mpViewer->isFinished())
           usleep(5000);
-  }*/
-
+  }
   // Wait until all thread have effectively stopped
   while (!mpLocalMapper->isFinished() || !mpLoopCloser->isFinished() ||
          mpLoopCloser->isRunningGBA()) {
@@ -607,8 +583,7 @@ void System::SaveTrajectoryTUM(const string& filename) {
   for (list<Sophus::SE3f>::iterator
            lit = mpTracker->mlRelativeFramePoses.begin(),
            lend = mpTracker->mlRelativeFramePoses.end();
-       lit != lend;
-       lit++, lRit++, lT++, lbL++) {
+       lit != lend; lit++, lRit++, lT++, lbL++) {
     if (*lbL) continue;
 
     KeyFrame* pKF = *lRit;
@@ -728,8 +703,7 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
 
   for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
             lend = mpTracker->mlRelativeFramePoses.end();
-       lit != lend;
-       lit++, lRit++, lT++, lbL++) {
+       lit != lend; lit++, lRit++, lT++, lbL++) {
     // cout << "1" << endl;
     if (*lbL) continue;
 
@@ -835,8 +809,7 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
 
   for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
             lend = mpTracker->mlRelativeFramePoses.end();
-       lit != lend;
-       lit++, lRit++, lT++, lbL++) {
+       lit != lend; lit++, lRit++, lT++, lbL++) {
     // cout << "1" << endl;
     if (*lbL) continue;
 
@@ -1271,8 +1244,7 @@ void System::SaveTrajectoryKITTI(const string& filename) {
   for (list<Sophus::SE3f>::iterator
            lit = mpTracker->mlRelativeFramePoses.begin(),
            lend = mpTracker->mlRelativeFramePoses.end();
-       lit != lend;
-       lit++, lRit++, lT++) {
+       lit != lend; lit++, lRit++, lT++) {
     ORB_SLAM3::KeyFrame* pKF = *lRit;
 
     Sophus::SE3f Trw;
@@ -1623,8 +1595,7 @@ void System::SaveTrajectoryUZH(const string& filename) {
 
   for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
             lend = mpTracker->mlRelativeFramePoses.end();
-       lit != lend;
-       lit++, lRit++, lT++, lbL++) {
+       lit != lend; lit++, lRit++, lT++, lbL++) {
     // cout << "1" << endl;
     if (*lbL) continue;
 
@@ -1663,15 +1634,15 @@ void System::SaveTrajectoryUZH(const string& filename) {
       Sophus::SE3f Twb = (pKF->mImuCalib.mTbc * (*lit) * Trw).inverse();
       Eigen::Quaternionf q = Twb.unit_quaternion();
       Eigen::Vector3f twb = Twb.translation();
-      f << setprecision(6) << (*lT) << " " << setprecision(9) << twb(0)
-        << " " << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " "
+      f << setprecision(6) << (*lT) << " " << setprecision(9) << twb(0) << " "
+        << twb(1) << " " << twb(2) << " " << q.x() << " " << q.y() << " "
         << q.z() << " " << q.w() << endl;
     } else {
       Sophus::SE3f Twc = ((*lit) * Trw).inverse();
       Eigen::Quaternionf q = Twc.unit_quaternion();
       Eigen::Vector3f twc = Twc.translation();
-      f << setprecision(6) << (*lT) << " " << setprecision(9) << twc(0)
-        << " " << twc(1) << " " << twc(2) << " " << q.x() << " " << q.y() << " "
+      f << setprecision(6) << (*lT) << " " << setprecision(9) << twc(0) << " "
+        << twc(1) << " " << twc(2) << " " << q.x() << " " << q.y() << " "
         << q.z() << " " << q.w() << endl;
     }
 

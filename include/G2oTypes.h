@@ -24,7 +24,7 @@
 
 #include <Frame.h>
 #include <KeyFrame.h>
-#include <math.h>
+#include <cmath>
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
@@ -46,27 +46,21 @@ class GeometricCamera;
 
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 9, 1> Vector9d;
-typedef Eigen::Matrix<double, 12, 1> Vector12d;
 typedef Eigen::Matrix<double, 15, 1> Vector15d;
-typedef Eigen::Matrix<double, 12, 12> Matrix12d;
 typedef Eigen::Matrix<double, 15, 15> Matrix15d;
 typedef Eigen::Matrix<double, 9, 9> Matrix9d;
 
-Eigen::Matrix3d ExpSO3(const double x, const double y, const double z);
+Eigen::Matrix3d ExpSO3(double x, double y, double z);
 Eigen::Matrix3d ExpSO3(const Eigen::Vector3d& w);
 
 Eigen::Vector3d LogSO3(const Eigen::Matrix3d& R);
 
 Eigen::Matrix3d InverseRightJacobianSO3(const Eigen::Vector3d& v);
 Eigen::Matrix3d RightJacobianSO3(const Eigen::Vector3d& v);
-Eigen::Matrix3d RightJacobianSO3(const double x,
-                                 const double y,
-                                 const double z);
+Eigen::Matrix3d RightJacobianSO3(double x, double y, double z);
 
 Eigen::Matrix3d Skew(const Eigen::Vector3d& w);
-Eigen::Matrix3d InverseRightJacobianSO3(const double x,
-                                        const double y,
-                                        const double z);
+Eigen::Matrix3d InverseRightJacobianSO3(double x, double y, double z);
 
 template <typename T = double>
 Eigen::Matrix<T, 3, 3> NormalizeRotation(const Eigen::Matrix<T, 3, 3>& R) {
@@ -78,7 +72,7 @@ Eigen::Matrix<T, 3, 3> NormalizeRotation(const Eigen::Matrix<T, 3, 3>& R) {
 class ImuCamPose {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  ImuCamPose() {}
+  ImuCamPose() = default;
   ImuCamPose(KeyFrame* pKF);
   ImuCamPose(Frame* pF);
   ImuCamPose(Eigen::Matrix3d& _Rwc, Eigen::Vector3d& _twc, KeyFrame* pKF);
@@ -86,8 +80,7 @@ class ImuCamPose {
   void SetParam(const std::vector<Eigen::Matrix3d>& _Rcw,
                 const std::vector<Eigen::Vector3d>& _tcw,
                 const std::vector<Eigen::Matrix3d>& _Rbc,
-                const std::vector<Eigen::Vector3d>& _tbc,
-                const double& _bf);
+                const std::vector<Eigen::Vector3d>& _tbc, const double& _bf);
 
   void Update(const double* pu);   // update in the imu reference
   void UpdateW(const double* pu);  // update in the world reference
@@ -117,27 +110,11 @@ class ImuCamPose {
   int its;
 };
 
-class InvDepthPoint {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  InvDepthPoint() {}
-  InvDepthPoint(double _rho, double _u, double _v, KeyFrame* pHostKF);
-
-  void Update(const double* pu);
-
-  double rho;
-  double u, v;  // they are not variables, observation in the host frame
-
-  double fx, fy, cx, cy, bf;  // from host frame
-
-  int its;
-};
-
 // Optimizable parameters are IMU pose
 class VertexPose : public g2o::BaseVertex<6, ImuCamPose> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexPose() {}
+  VertexPose() = default;
   VertexPose(KeyFrame* pKF) { setEstimate(ImuCamPose(pKF)); }
   VertexPose(Frame* pF) { setEstimate(ImuCamPose(pF)); }
 
@@ -156,7 +133,7 @@ class VertexPose4DoF : public g2o::BaseVertex<4, ImuCamPose> {
   // Translation and yaw are the only optimizable variables
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexPose4DoF() {}
+  VertexPose4DoF() = default;
   VertexPose4DoF(KeyFrame* pKF) { setEstimate(ImuCamPose(pKF)); }
   VertexPose4DoF(Frame* pF) { setEstimate(ImuCamPose(pF)); }
   VertexPose4DoF(Eigen::Matrix3d& _Rwc, Eigen::Vector3d& _twc, KeyFrame* pKF) {
@@ -184,7 +161,7 @@ class VertexPose4DoF : public g2o::BaseVertex<4, ImuCamPose> {
 class VertexVelocity : public g2o::BaseVertex<3, Eigen::Vector3d> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexVelocity() {}
+  VertexVelocity() = default;
   VertexVelocity(KeyFrame* pKF);
   VertexVelocity(Frame* pF);
 
@@ -203,7 +180,7 @@ class VertexVelocity : public g2o::BaseVertex<3, Eigen::Vector3d> {
 class VertexGyroBias : public g2o::BaseVertex<3, Eigen::Vector3d> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexGyroBias() {}
+  VertexGyroBias() = default;
   VertexGyroBias(KeyFrame* pKF);
   VertexGyroBias(Frame* pF);
 
@@ -222,7 +199,7 @@ class VertexGyroBias : public g2o::BaseVertex<3, Eigen::Vector3d> {
 class VertexAccBias : public g2o::BaseVertex<3, Eigen::Vector3d> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexAccBias() {}
+  VertexAccBias() = default;
   VertexAccBias(KeyFrame* pKF);
   VertexAccBias(Frame* pF);
 
@@ -242,12 +219,12 @@ class VertexAccBias : public g2o::BaseVertex<3, Eigen::Vector3d> {
 class GDirection {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  GDirection() {}
+  GDirection() = default;
   GDirection(Eigen::Matrix3d pRwg) : Rwg(pRwg) {}
 
   void Update(const double* pu) { Rwg = Rwg * ExpSO3(pu[0], pu[1], 0.0); }
 
-  Eigen::Matrix3d Rwg, Rgw;
+  Eigen::Matrix3d Rwg;
 
   int its;
 };
@@ -255,7 +232,7 @@ class GDirection {
 class VertexGDir : public g2o::BaseVertex<2, GDirection> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexGDir() {}
+  VertexGDir() = default;
   VertexGDir(Eigen::Matrix3d pRwg) { setEstimate(GDirection(pRwg)); }
 
   virtual bool read(std::istream& is) { return false; }
@@ -286,30 +263,9 @@ class VertexScale : public g2o::BaseVertex<1, double> {
   }
 };
 
-// Inverse depth point (just one parameter, inverse depth at the host frame)
-class VertexInvDepth : public g2o::BaseVertex<1, InvDepthPoint> {
- public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  VertexInvDepth() {}
-  VertexInvDepth(double invDepth, double u, double v, KeyFrame* pHostKF) {
-    setEstimate(InvDepthPoint(invDepth, u, v, pHostKF));
-  }
-
-  virtual bool read(std::istream& is) { return false; }
-  virtual bool write(std::ostream& os) const { return false; }
-
-  virtual void setToOriginImpl() {}
-
-  virtual void oplusImpl(const double* update_) {
-    _estimate.Update(update_);
-    updateCache();
-  }
-};
-
-class EdgeMono : public g2o::BaseBinaryEdge<2,
-                                            Eigen::Vector2d,
-                                            g2o::VertexSBAPointXYZ,
-                                            VertexPose> {
+class EdgeMono
+    : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, g2o::VertexSBAPointXYZ,
+                                 VertexPose> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -389,10 +345,9 @@ class EdgeMonoOnlyPose
   const int cam_idx;
 };
 
-class EdgeStereo : public g2o::BaseBinaryEdge<3,
-                                              Eigen::Vector3d,
-                                              g2o::VertexSBAPointXYZ,
-                                              VertexPose> {
+class EdgeStereo
+    : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, g2o::VertexSBAPointXYZ,
+                                 VertexPose> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -594,13 +549,12 @@ class EdgeInertialGS : public g2o::BaseMultiEdge<9, Vector9d> {
   }
 };
 
-class EdgeGyroRW
-    : public g2o::
-          BaseBinaryEdge<3, Eigen::Vector3d, VertexGyroBias, VertexGyroBias> {
+class EdgeGyroRW : public g2o::BaseBinaryEdge<3, Eigen::Vector3d,
+                                              VertexGyroBias, VertexGyroBias> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  EdgeGyroRW() {}
+  EdgeGyroRW() = default;
 
   virtual bool read(std::istream& is) { return false; }
   virtual bool write(std::ostream& os) const { return false; }
@@ -632,13 +586,12 @@ class EdgeGyroRW
   }
 };
 
-class EdgeAccRW
-    : public g2o::
-          BaseBinaryEdge<3, Eigen::Vector3d, VertexAccBias, VertexAccBias> {
+class EdgeAccRW : public g2o::BaseBinaryEdge<3, Eigen::Vector3d, VertexAccBias,
+                                             VertexAccBias> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  EdgeAccRW() {}
+  EdgeAccRW() = default;
 
   virtual bool read(std::istream& is) { return false; }
   virtual bool write(std::ostream& os) const { return false; }
@@ -672,12 +625,9 @@ class ConstraintPoseImu {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  ConstraintPoseImu(const Eigen::Matrix3d& Rwb_,
-                    const Eigen::Vector3d& twb_,
-                    const Eigen::Vector3d& vwb_,
-                    const Eigen::Vector3d& bg_,
-                    const Eigen::Vector3d& ba_,
-                    const Matrix15d& H_)
+  ConstraintPoseImu(const Eigen::Matrix3d& Rwb_, const Eigen::Vector3d& twb_,
+                    const Eigen::Vector3d& vwb_, const Eigen::Vector3d& bg_,
+                    const Eigen::Vector3d& ba_, const Matrix15d& H_)
       : Rwb(Rwb_), twb(twb_), vwb(vwb_), bg(bg_), ba(ba_), H(H_) {
     H = (H + H) / 2;
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<double, 15, 15>> es(H);
@@ -786,7 +736,6 @@ class Edge4DoF
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   Edge4DoF(const Eigen::Matrix4d& deltaT) {
-    dTij = deltaT;
     dRij = deltaT.block<3, 3>(0, 0);
     dtij = deltaT.block<3, 1>(0, 3);
   }
@@ -808,7 +757,6 @@ class Edge4DoF
 
   // virtual void linearizeOplus(); // numerical implementation
 
-  Eigen::Matrix4d dTij;
   Eigen::Matrix3d dRij;
   Eigen::Vector3d dtij;
 };

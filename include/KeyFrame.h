@@ -34,7 +34,9 @@
 #include "MapPoint.h"
 #include "ORBVocabulary.h"
 #include "ORBextractor.h"
+#include "OdomTypes.h"
 #include "SerializationUtils.h"
+
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
 
@@ -254,8 +256,7 @@ class KeyFrame {
   MapPoint* GetMapPoint(const size_t& idx);
 
   // KeyPoint functions
-  std::vector<size_t> GetFeaturesInArea(const float& x,
-                                        const float& y,
+  std::vector<size_t> GetFeaturesInArea(const float& x, const float& y,
                                         const float& r,
                                         const bool bRight = false) const;
   bool UnprojectStereo(int i, Eigen::Vector3f& x3D);
@@ -291,13 +292,10 @@ class KeyFrame {
   IMU::Bias GetImuBias();
 
   bool ProjectPointDistort(MapPoint* pMP, cv::Point2f& kp, float& u, float& v);
-  bool ProjectPointUnDistort(MapPoint* pMP,
-                             cv::Point2f& kp,
-                             float& u,
+  bool ProjectPointUnDistort(MapPoint* pMP, cv::Point2f& kp, float& u,
                              float& v);
 
-  void PreSave(set<KeyFrame*>& spKF,
-               set<MapPoint*>& spMP,
+  void PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP,
                set<GeometricCamera*>& spCam);
   void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid,
                 map<long unsigned int, MapPoint*>& mpMPid,
@@ -413,6 +411,8 @@ class KeyFrame {
 
   IMU::Preintegrated* mpImuPreintegrated;
   IMU::Calib mImuCalib;
+
+  ODOM::Preintegrated* mpOdomPreintegrated;
 
   unsigned int mnOriginMapId;
 

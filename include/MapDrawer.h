@@ -44,12 +44,12 @@ class MapDrawer {
 
   Atlas* mpAtlas;
 
-  void DrawMapPoints();
+  void DrawMapPoints() const;
   void DrawKeyFrames(const bool bDrawKF,
                      const bool bDrawGraph,
                      const bool bDrawInertialGraph,
                      const bool bDrawOptLba);
-  void DrawCurrentCamera(pangolin::OpenGlMatrix& Twc);
+  void DrawCurrentCamera(pangolin::OpenGlMatrix& Twc) const;
   void SetCurrentCameraPose(const Sophus::SE3f& Tcw);
   void SetReferenceKeyFrame(KeyFrame* pKF);
   void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix& M,

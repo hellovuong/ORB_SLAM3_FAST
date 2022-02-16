@@ -28,21 +28,20 @@
 
 namespace ORB_SLAM3 {
 
-Atlas::Atlas() { mpCurrentMap = static_cast<Map*>(NULL); }
+Atlas::Atlas() { mpCurrentMap = static_cast<Map*>(nullptr); }
 
 Atlas::Atlas(int initKFid) : mnLastInitKFidMap(initKFid), mHasViewer(false) {
-  mpCurrentMap = static_cast<Map*>(NULL);
+  mpCurrentMap = static_cast<Map*>(nullptr);
   CreateNewMap();
 }
 
 Atlas::~Atlas() {
-  for (std::set<Map*>::iterator it = mspMaps.begin(), end = mspMaps.end();
+  for (auto it = mspMaps.begin(), end = mspMaps.end();
        it != end;) {
     Map* pMi = *it;
 
     if (pMi) {
       delete pMi;
-      pMi = static_cast<Map*>(NULL);
 
       it = mspMaps.erase(it);
     } else
@@ -206,7 +205,7 @@ void Atlas::clearAtlas() {
       delete *it;
   }*/
   mspMaps.clear();
-  mpCurrentMap = static_cast<Map*>(NULL);
+  mpCurrentMap = static_cast<Map*>(nullptr);
   mnLastInitKFidMap = 0;
 }
 
@@ -273,7 +272,7 @@ void Atlas::PreSave() {
   for (Map* pMi : mvpBackupMaps) {
     if (!pMi || pMi->IsBad()) continue;
 
-    if (pMi->GetAllKeyFrames().size() == 0) {
+    if (pMi->GetAllKeyFrames().empty()) {
       // Empty map, erase before of save it.
       SetMapBad(pMi);
       continue;

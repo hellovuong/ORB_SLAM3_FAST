@@ -37,15 +37,11 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
 int main(int argc, char** argv) {
   if (argc < 4) {
@@ -95,8 +91,8 @@ int main(int argc, char** argv) {
 
     string pathImu = pathSeq + "/imu.txt";
 
-    LoadImages(
-        pathSeq, vstrImageLeft[seq], vstrImageRight[seq], vTimestampsCam[seq]);
+    LoadImages(pathSeq, vstrImageLeft[seq], vstrImageRight[seq],
+               vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
     cout << "Loading IMU for sequence " << seq << "...";
@@ -175,20 +171,12 @@ int main(int argc, char** argv) {
       vImuMeas.clear();
 
       if (ni > 0)
-        while (
-            vTimestampsImu[seq][first_imu[seq]] <=
-            vTimestampsCam
-                [seq]
-                [ni])  // while(vTimestampsImu[first_imu]<=vTimestampsCam[ni])
-        {
-          vImuMeas.push_back(
-              ORB_SLAM3::IMU::Point(vAcc[seq][first_imu[seq]].x,
-                                    vAcc[seq][first_imu[seq]].y,
-                                    vAcc[seq][first_imu[seq]].z,
-                                    vGyro[seq][first_imu[seq]].x,
-                                    vGyro[seq][first_imu[seq]].y,
-                                    vGyro[seq][first_imu[seq]].z,
-                                    vTimestampsImu[seq][first_imu[seq]]));
+        while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][ni]) {
+          vImuMeas.push_back(ORB_SLAM3::IMU::Point(
+              vAcc[seq][first_imu[seq]].x, vAcc[seq][first_imu[seq]].y,
+              vAcc[seq][first_imu[seq]].z, vGyro[seq][first_imu[seq]].x,
+              vGyro[seq][first_imu[seq]].y, vGyro[seq][first_imu[seq]].z,
+              vTimestampsImu[seq][first_imu[seq]]));
           first_imu[seq]++;
         }
 
@@ -260,10 +248,8 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/left_images.txt";
   string strPathTimesRight = strPathFolder + "/right_images.txt";
@@ -313,10 +299,8 @@ void LoadImages(const string& strPathFolder,
   }
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);
@@ -335,13 +319,13 @@ void LoadIMU(const string& strImuPath,
       ss << s;
       int id;
       ss >> id;
-      ss >> data[0]; // time
-      ss >> data[1]; // gyro_x
-      ss >> data[2]; // gyro_y
-      ss >> data[3]; // gyro_z
-      ss >> data[4]; // acel_x
-      ss >> data[5]; // acel_y
-      ss >> data[6]; // acel_z
+      ss >> data[0];  // time
+      ss >> data[1];  // gyro_x
+      ss >> data[2];  // gyro_y
+      ss >> data[3];  // gyro_z
+      ss >> data[4];  // acel_x
+      ss >> data[5];  // acel_y
+      ss >> data[6];  // acel_z
       vTimeStamps.push_back(data[0]);
       vAcc.push_back(cv::Point3f(data[4], data[5], data[6]));
       vGyro.push_back(cv::Point3f(data[1], data[2], data[3]));

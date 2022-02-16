@@ -70,12 +70,12 @@ bool LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
  *
  *   \param strOdomPath Path to the data.
  *   \param vTimeStamps Vector of timestamp.
- *   \param vOdom Vector of data [t_x, t_y, r_z]
+ *   \param vOdom SE2
  *   \return Success?
  *
  **/
 bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
-              vector<Eigen::Vector3d>& vOdom);
+              vector<Sophus::SE2f>& vOdom);
 int main(int argc, char** argv) {
   if (argc < 4) {
     cerr << endl
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
   vector<vector<cv::Point3f>> vAcc, vGyro;
   vector<vector<double>> vTimestampsImu;
 
-  vector<vector<Eigen::Vector3d>> vOdom;
+  vector<vector<Sophus::SE2f>> vOdom;
   vector<vector<double>> vTimestampsOdom;
 
   vector<int> vnImages;
@@ -202,11 +202,10 @@ int main(int argc, char** argv) {
 
   cout << endl << "-------" << endl;
   cout.precision(17);
-
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
   ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO,
-                         false);
+                         true);
 
   cv::Mat imLeft, imRight;
   for (seq = 0; seq < num_seq; seq++) {
@@ -252,10 +251,9 @@ int main(int argc, char** argv) {
         }
         while (vTimestampsOdom[seq][first_odom[seq]] <=
                vTimestampsCam[seq][ni]) {
-          vOdomMeas.push_back(ORB_SLAM3::ODOM::Meas(
-              vOdom[seq][first_odom[seq]][0], vOdom[seq][first_odom[seq]][1],
-              vOdom[seq][first_odom[seq]][2],
-              vTimestampsOdom[seq][first_odom[seq]]));
+          vOdomMeas.push_back(
+              ORB_SLAM3::ODOM::Meas(vOdom[seq][first_odom[seq]],
+                                    vTimestampsOdom[seq][first_odom[seq]]));
           first_odom[seq]++;
         }
       }
@@ -420,7 +418,7 @@ bool LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
 }
 
 bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
-              vector<Eigen::Vector3d>& vOdom) {
+              vector<Sophus::SE2f>& vOdom) {
   ifstream fOdom;
   fOdom.open(strOdomPath.c_str());
   vTimeStamps.reserve(5000);
@@ -448,11 +446,12 @@ bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
       ss >> data[7];  // q_w
     }
     vTimeStamps.push_back(data[0]);
-    Eigen::Quaterniond Q(data[7], data[4], data[5], data[6]);
-    double yaw = Q.toRotationMatrix().eulerAngles(2, 1, 0)[0];
-    Eigen::Vector3d meas;
-    meas << data[1], data[2], yaw;
-    vOdom.push_back(meas);
+    //    Eigen::Quaterniond Q(data[7], data[4], data[5], data[6]);
+    //    double yaw = Q.toRotationMatrix().eulerAngles(2, 1, 0)[0];
+
+    Sophus::SE2f meas_(Sophus::SO2f(data[7], data[6]),
+                       Eigen::Vector2f(data[1], data[2]));
+    vOdom.push_back(meas_);
   }
 
   return true;

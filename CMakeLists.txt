@@ -11,7 +11,7 @@ option(BUILD_EXAMPLES "Build Examples " OFF)
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-error=unused-parameter   -O3")
 #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ")
@@ -44,7 +44,7 @@ MESSAGE("OPENCV VERSION:")
 MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED PATHS "/home/vuong/Code/local_lib")
+find_package(Pangolin REQUIRED)
 find_package(realsense2)
 
 find_package(TBB REQUIRED)
@@ -124,7 +124,7 @@ add_library(${PROJECT_NAME} SHARED
         include/TwoViewReconstruction.h
         include/SerializationUtils.h
         include/Config.h
-        include/Settings.h src/OdomTypes.cpp include/OdomTypes.h)
+        include/Settings.h src/OdomTypes.cpp include/OdomTypes.h src/OdomFactor.cpp include/OdomFactor.h)
 
 add_subdirectory(Thirdparty/g2o)
 

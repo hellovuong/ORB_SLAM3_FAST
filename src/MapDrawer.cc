@@ -30,8 +30,7 @@
 
 namespace ORB_SLAM3 {
 
-MapDrawer::MapDrawer(Atlas* pAtlas,
-                     const string& strSettingPath,
+MapDrawer::MapDrawer(Atlas* pAtlas, const string& strSettingPath,
                      Settings* settings)
     : mpAtlas(pAtlas) {
   if (settings) {
@@ -126,7 +125,7 @@ bool MapDrawer::ParseViewerParamFile(cv::FileStorage& fSettings) {
   return !b_miss_params;
 }
 
-void MapDrawer::DrawMapPoints() {
+void MapDrawer::DrawMapPoints() const {
   Map* pActiveMap = mpAtlas->GetCurrentMap();
   if (!pActiveMap) return;
 
@@ -141,9 +140,9 @@ void MapDrawer::DrawMapPoints() {
   glBegin(GL_POINTS);
   glColor3f(0.0, 0.0, 0.0);
 
-  for (size_t i = 0, iend = vpMPs.size(); i < iend; i++) {
-    if (vpMPs[i]->isBad() || spRefMPs.count(vpMPs[i])) continue;
-    Eigen::Matrix<float, 3, 1> pos = vpMPs[i]->GetWorldPos();
+  for (auto vpMP : vpMPs) {
+    if (vpMP->isBad() || spRefMPs.count(vpMP)) continue;
+    Eigen::Matrix<float, 3, 1> pos = vpMP->GetWorldPos();
     glVertex3f(pos(0), pos(1), pos(2));
   }
   glEnd();
@@ -152,19 +151,16 @@ void MapDrawer::DrawMapPoints() {
   glBegin(GL_POINTS);
   glColor3f(1.0, 0.0, 0.0);
 
-  for (set<MapPoint*>::iterator sit = spRefMPs.begin(), send = spRefMPs.end();
-       sit != send;
-       sit++) {
-    if ((*sit)->isBad()) continue;
-    Eigen::Matrix<float, 3, 1> pos = (*sit)->GetWorldPos();
+  for (auto spRefMP : spRefMPs) {
+    if (spRefMP->isBad()) continue;
+    Eigen::Matrix<float, 3, 1> pos = spRefMP->GetWorldPos();
     glVertex3f(pos(0), pos(1), pos(2));
   }
 
   glEnd();
 }
 
-void MapDrawer::DrawKeyFrames(const bool bDrawKF,
-                              const bool bDrawGraph,
+void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
                               const bool bDrawInertialGraph,
                               const bool bDrawOptLba) {
   const float& w = mKeyFrameSize;
@@ -181,8 +177,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
   const vector<KeyFrame*> vpKFs = pActiveMap->GetAllKeyFrames();
 
   if (bDrawKF) {
-    for (size_t i = 0; i < vpKFs.size(); i++) {
-      KeyFrame* pKF = vpKFs[i];
+    for (auto pKF : vpKFs) {
       Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
       unsigned int index_color = pKF->mnOriginMapId;
 
@@ -246,16 +241,15 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
     glBegin(GL_LINES);
 
     // cout << "-----------------Draw graph-----------------" << endl;
-    for (size_t i = 0; i < vpKFs.size(); i++) {
+    for (auto vpKF : vpKFs) {
       // Covisibility Graph
-      const vector<KeyFrame*> vCovKFs = vpKFs[i]->GetCovisiblesByWeight(100);
-      Eigen::Vector3f Ow = vpKFs[i]->GetCameraCenter();
+      const vector<KeyFrame*> vCovKFs = vpKF->GetCovisiblesByWeight(100);
+      Eigen::Vector3f Ow = vpKF->GetCameraCenter();
       if (!vCovKFs.empty()) {
         for (vector<KeyFrame*>::const_iterator vit = vCovKFs.begin(),
                                                vend = vCovKFs.end();
-             vit != vend;
-             vit++) {
-          if ((*vit)->mnId < vpKFs[i]->mnId) continue;
+             vit != vend; vit++) {
+          if ((*vit)->mnId < vpKF->mnId) continue;
           Eigen::Vector3f Ow2 = (*vit)->GetCameraCenter();
           glVertex3f(Ow(0), Ow(1), Ow(2));
           glVertex3f(Ow2(0), Ow2(1), Ow2(2));
@@ -263,7 +257,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
       }
 
       // Spanning tree
-      KeyFrame* pParent = vpKFs[i]->GetParent();
+      KeyFrame* pParent = vpKF->GetParent();
       if (pParent) {
         Eigen::Vector3f Owp = pParent->GetCameraCenter();
         glVertex3f(Ow(0), Ow(1), Ow(2));
@@ -271,12 +265,11 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
       }
 
       // Loops
-      set<KeyFrame*> sLoopKFs = vpKFs[i]->GetLoopEdges();
+      set<KeyFrame*> sLoopKFs = vpKF->GetLoopEdges();
       for (set<KeyFrame*>::iterator sit = sLoopKFs.begin(),
                                     send = sLoopKFs.end();
-           sit != send;
-           sit++) {
-        if ((*sit)->mnId < vpKFs[i]->mnId) continue;
+           sit != send; sit++) {
+        if ((*sit)->mnId < vpKF->mnId) continue;
         Eigen::Vector3f Owl = (*sit)->GetCameraCenter();
         glVertex3f(Ow(0), Ow(1), Ow(2));
         glVertex3f(Owl(0), Owl(1), Owl(2));
@@ -292,8 +285,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
     glBegin(GL_LINES);
 
     // Draw inertial links
-    for (size_t i = 0; i < vpKFs.size(); i++) {
-      KeyFrame* pKFi = vpKFs[i];
+    for (auto pKFi : vpKFs) {
       Eigen::Vector3f Ow = pKFi->GetCameraCenter();
       KeyFrame* pNext = pKFi->mNextKF;
       if (pNext) {
@@ -314,8 +306,8 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
 
       vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
 
-      for (size_t i = 0; i < vpKFs.size(); i++) {
-        KeyFrame* pKF = vpKFs[i];
+      for (auto & vpKF : vpKFs) {
+        KeyFrame* pKF = vpKF;
         Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
         unsigned int index_color = pKF->mnOriginMapId;
 
@@ -323,7 +315,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
 
         glMultMatrixf((GLfloat*)Twc.data());
 
-        if (!vpKFs[i]->GetParent())  // It is the first KF in the map
+        if (!vpKF->GetParent())  // It is the first KF in the map
         {
           glLineWidth(mKeyFrameLineWidth * 5);
           glColor3f(1.0f, 0.0f, 0.0f);
@@ -364,7 +356,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF,
   }
 }
 
-void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix& Twc) {
+void MapDrawer::DrawCurrentCamera(pangolin::OpenGlMatrix& Twc) const {
   const float& w = mCameraSize;
   const float h = w * 0.75;
   const float z = w * 0.6;

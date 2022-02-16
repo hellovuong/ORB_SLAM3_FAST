@@ -87,7 +87,7 @@ class Map {
   long unsigned int MapPointsInMap();
   long unsigned KeyFramesInMap();
 
-  long unsigned int GetId();
+  long unsigned int GetId() const;
 
   long unsigned int GetInitKFid();
   void SetInitKFid(long unsigned int initKFif);
@@ -102,7 +102,7 @@ class Map {
   bool IsInUse();
 
   void SetBad();
-  bool IsBad();
+  bool IsBad() const;
 
   void clear();
 

@@ -23,7 +23,6 @@
 
 #include <iostream>
 
-#include "Converter.h"
 #include "GeometricTools.h"
 
 namespace ORB_SLAM3 {
@@ -180,8 +179,8 @@ void Preintegrated::Reintegrate() {
   std::unique_lock<std::mutex> lock(mMutex);
   const std::vector<integrable> aux = mvMeasurements;
   Initialize(bu);
-  for (size_t i = 0; i < aux.size(); i++)
-    IntegrateNewMeasurement(aux[i].a, aux[i].w, aux[i].t);
+  for (const auto & i : aux)
+    IntegrateNewMeasurement(i.a, i.w, i.t);
 }
 
 void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,

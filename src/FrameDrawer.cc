@@ -119,16 +119,14 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
         cv::line(im, pt1, pt2, standardColor);
       }
     }
-    for (vector<pair<cv::Point2f, cv::Point2f> >::iterator it = vTracks.begin();
-         it != vTracks.end();
-         it++) {
+    for (auto & vTrack : vTracks) {
       cv::Point2f pt1, pt2;
       if (imageScale != 1.f) {
-        pt1 = (*it).first / imageScale;
-        pt2 = (*it).second / imageScale;
+        pt1 = vTrack.first / imageScale;
+        pt2 = vTrack.second / imageScale;
       } else {
-        pt1 = (*it).first;
-        pt2 = (*it).second;
+        pt1 = vTrack.first;
+        pt2 = vTrack.second;
       }
       cv::line(im, pt1, pt2, standardColor, 5);
     }
@@ -138,7 +136,7 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale) {
     mnTracked = 0;
     mnTrackedVO = 0;
     const float r = 5;
-    int n = vCurrentKeys.size();
+    size_t n = vCurrentKeys.size();
     for (int i = 0; i < n; i++) {
       if (vbVO[i] || vbMap[i]) {
         cv::Point2f pt1, pt2;
@@ -243,8 +241,8 @@ cv::Mat FrameDrawer::DrawRightFrame(float imageScale) {
     mnTracked = 0;
     mnTrackedVO = 0;
     const float r = 5;
-    const int n = mvCurrentKeysRight.size();
-    const int Nleft = mvCurrentKeys.size();
+    const size_t n = mvCurrentKeysRight.size();
+    const size_t Nleft = mvCurrentKeys.size();
 
     for (int i = 0; i < n; i++) {
       if (vbVO[i + Nleft] || vbMap[i + Nleft]) {

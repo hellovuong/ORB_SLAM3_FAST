@@ -32,7 +32,7 @@ Map::Map()
       mnBigChangeIdx(0),
       mbImuInitialized(false),
       mnMapChange(0),
-      mpFirstRegionKF(static_cast<KeyFrame*>(NULL)),
+      mpFirstRegionKF(static_cast<KeyFrame*>(nullptr)),
       mbFail(false),
       mIsInUse(false),
       mHasTumbnail(false),
@@ -42,7 +42,7 @@ Map::Map()
       mbIMU_BA1(false),
       mbIMU_BA2(false) {
   mnId = nNextId++;
-  mThumbnail = static_cast<GLubyte*>(NULL);
+  mThumbnail = static_cast<GLubyte*>(nullptr);
 }
 
 Map::Map(int initKFid)
@@ -53,7 +53,7 @@ Map::Map(int initKFid)
       mHasTumbnail(false),
       mbBad(false),
       mbImuInitialized(false),
-      mpFirstRegionKF(static_cast<KeyFrame*>(NULL)),
+      mpFirstRegionKF(static_cast<KeyFrame*>(nullptr)),
       mnMapChange(0),
       mbFail(false),
       mnMapChangeNotified(0),
@@ -61,7 +61,7 @@ Map::Map(int initKFid)
       mbIMU_BA1(false),
       mbIMU_BA2(false) {
   mnId = nNextId++;
-  mThumbnail = static_cast<GLubyte*>(NULL);
+  mThumbnail = static_cast<GLubyte*>(nullptr);
 }
 
 Map::~Map() {
@@ -72,7 +72,7 @@ Map::~Map() {
   mspKeyFrames.clear();
 
   if (mThumbnail) delete mThumbnail;
-  mThumbnail = static_cast<GLubyte*>(NULL);
+  mThumbnail = static_cast<GLubyte*>(nullptr);
 
   mvpReferenceMapPoints.clear();
   mvpKeyFrameOrigins.clear();
@@ -121,7 +121,7 @@ void Map::EraseMapPoint(MapPoint* pMP) {
 void Map::EraseKeyFrame(KeyFrame* pKF) {
   unique_lock<mutex> lock(mMutexMap);
   mspKeyFrames.erase(pKF);
-  if (mspKeyFrames.size() > 0) {
+  if (!mspKeyFrames.empty()) {
     if (pKF->mnId == mpKFlowerID->mnId) {
       vector<KeyFrame*> vpKFs =
           vector<KeyFrame*>(mspKeyFrames.begin(), mspKeyFrames.end());
@@ -129,7 +129,7 @@ void Map::EraseKeyFrame(KeyFrame* pKF) {
       mpKFlowerID = vpKFs[0];
     }
   } else {
-    mpKFlowerID = 0;
+    mpKFlowerID = nullptr;
   }
 
   // TODO: This only erase the pointer.
@@ -176,7 +176,7 @@ vector<MapPoint*> Map::GetReferenceMapPoints() {
   return mvpReferenceMapPoints;
 }
 
-long unsigned int Map::GetId() { return mnId; }
+long unsigned int Map::GetId() const { return mnId; }
 long unsigned int Map::GetInitKFid() {
   unique_lock<mutex> lock(mMutexMap);
   return mnInitKFid;
@@ -205,10 +205,9 @@ void Map::clear() {
 
   for (set<KeyFrame*>::iterator sit = mspKeyFrames.begin(),
                                 send = mspKeyFrames.end();
-       sit != send;
-       sit++) {
+       sit != send; sit++) {
     KeyFrame* pKF = *sit;
-    pKF->UpdateMap(static_cast<Map*>(NULL));
+    pKF->UpdateMap(static_cast<Map*>(nullptr));
     //        delete *sit;
   }
 
@@ -226,10 +225,9 @@ bool Map::IsInUse() { return mIsInUse; }
 
 void Map::SetBad() { mbBad = true; }
 
-bool Map::IsBad() { return mbBad; }
+bool Map::IsBad() const { return mbBad; }
 
-void Map::ApplyScaledRotation(const Sophus::SE3f& T,
-                              const float s,
+void Map::ApplyScaledRotation(const Sophus::SE3f& T, const float s,
                               const bool bScaledVel) {
   unique_lock<mutex> lock(mMutexMap);
 
@@ -238,10 +236,7 @@ void Map::ApplyScaledRotation(const Sophus::SE3f& T,
   Eigen::Matrix3f Ryw = Tyw.rotationMatrix();
   Eigen::Vector3f tyw = Tyw.translation();
 
-  for (set<KeyFrame*>::iterator sit = mspKeyFrames.begin();
-       sit != mspKeyFrames.end();
-       sit++) {
-    KeyFrame* pKF = *sit;
+  for (auto pKF : mspKeyFrames) {
     Sophus::SE3f Twc = pKF->GetPoseInverse();
     Twc.translation() *= s;
     Sophus::SE3f Tyc = Tyw * Twc;
@@ -253,10 +248,7 @@ void Map::ApplyScaledRotation(const Sophus::SE3f& T,
     else
       pKF->SetVelocity(Ryw * Vw * s);
   }
-  for (set<MapPoint*>::iterator sit = mspMapPoints.begin();
-       sit != mspMapPoints.end();
-       sit++) {
-    MapPoint* pMP = *sit;
+  for (auto pMP : mspMapPoints) {
     pMP->SetWorldPos(s * Ryw * pMP->GetWorldPos() + tyw);
     pMP->UpdateNormalAndDepth();
   }
@@ -328,16 +320,13 @@ void Map::PreSave(std::set<GeometricCamera*>& spCams) {
   for (MapPoint* pMPi : mspMapPoints) {
     if (!pMPi || pMPi->isBad()) continue;
 
-    if (pMPi->GetObservations().size() == 0) {
+    if (pMPi->GetObservations().empty()) {
       nMPWithoutObs++;
     }
     map<KeyFrame*, std::tuple<int, int>> mpObs = pMPi->GetObservations();
-    for (map<KeyFrame*, std::tuple<int, int>>::iterator it = mpObs.begin(),
-                                                        end = mpObs.end();
-         it != end;
-         ++it) {
-      if (it->first->GetMap() != this || it->first->isBad()) {
-        pMPi->EraseObservation(it->first);
+    for (auto& mpOb : mpObs) {
+      if (mpOb.first->GetMap() != this || mpOb.first->isBad()) {
+        pMPi->EraseObservation(mpOb.first);
       }
     }
   }
@@ -345,8 +334,8 @@ void Map::PreSave(std::set<GeometricCamera*>& spCams) {
   // Saves the id of KF origins
   mvBackupKeyFrameOriginsId.clear();
   mvBackupKeyFrameOriginsId.reserve(mvpKeyFrameOrigins.size());
-  for (int i = 0, numEl = mvpKeyFrameOrigins.size(); i < numEl; ++i) {
-    mvBackupKeyFrameOriginsId.push_back(mvpKeyFrameOrigins[i]->mnId);
+  for (auto& mvpKeyFrameOrigin : mvpKeyFrameOrigins) {
+    mvBackupKeyFrameOriginsId.push_back(mvpKeyFrameOrigin->mnId);
   }
 
   // Backup of MapPoints
@@ -383,11 +372,9 @@ void Map::PostLoad(
     ORBVocabulary*
         pORBVoc /*, map<long unsigned int, KeyFrame*>& mpKeyFrameId*/,
     map<unsigned int, GeometricCamera*>& mpCams) {
-  std::copy(mvpBackupMapPoints.begin(),
-            mvpBackupMapPoints.end(),
+  std::copy(mvpBackupMapPoints.begin(), mvpBackupMapPoints.end(),
             std::inserter(mspMapPoints, mspMapPoints.begin()));
-  std::copy(mvpBackupKeyFrames.begin(),
-            mvpBackupKeyFrames.end(),
+  std::copy(mvpBackupKeyFrames.begin(), mvpBackupKeyFrames.end(),
             std::inserter(mspKeyFrames, mspKeyFrames.begin()));
 
   map<long unsigned int, MapPoint*> mpMapPointId;
@@ -432,8 +419,8 @@ void Map::PostLoad(
 
   mvpKeyFrameOrigins.clear();
   mvpKeyFrameOrigins.reserve(mvBackupKeyFrameOriginsId.size());
-  for (int i = 0; i < mvBackupKeyFrameOriginsId.size(); ++i) {
-    mvpKeyFrameOrigins.push_back(mpKeyFrameId[mvBackupKeyFrameOriginsId[i]]);
+  for (unsigned long & i : mvBackupKeyFrameOriginsId) {
+    mvpKeyFrameOrigins.push_back(mpKeyFrameId[i]);
   }
 
   mvpBackupMapPoints.clear();

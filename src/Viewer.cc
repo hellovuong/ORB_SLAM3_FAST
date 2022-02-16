@@ -141,9 +141,9 @@ bool Viewer::ParseViewerParamFile(cv::FileStorage& fSettings) {
   }
 
   node = fSettings["Viewer.ViewpointF"];
-  if (!node.empty()) {
+  if (!node.empty())
     mViewpointF = node.real();
-  } else {
+  else {
     std::cerr
         << "*Viewer.ViewpointF parameter doesn't exist or is not a real number*"
         << std::endl;
@@ -219,7 +219,7 @@ void Viewer::Run() {
   float trackedImageScale = mpTracker->GetImageScale();
 
   cout << "Starting the Viewer" << endl;
-  while (1) {
+  while (true) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mpMapDrawer->GetCurrentOpenGLCameraMatrix(Twc, Ow);

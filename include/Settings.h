@@ -93,35 +93,40 @@ class Settings {
   float noiseGyro() { return noiseGyro_; }
   float noiseAcc() { return noiseAcc_; }
   float gyroWalk() { return gyroWalk_; }
-  float accWalk() { return accWalk_; }
-  float imuFrequency() { return imuFrequency_; }
+  float accWalk() const { return accWalk_; }
+  float imuFrequency() const { return imuFrequency_; }
   Sophus::SE3f Tbc() { return Tbc_; }
-  bool insertKFsWhenLost() { return insertKFsWhenLost_; }
+  bool insertKFsWhenLost() const { return insertKFsWhenLost_; }
 
-  float depthMapFactor() { return depthMapFactor_; }
+  float depthMapFactor() const { return depthMapFactor_; }
 
-  int nFeatures() { return nFeatures_; }
-  int nLevels() { return nLevels_; }
-  float initThFAST() { return initThFAST_; }
-  float minThFAST() { return minThFAST_; }
-  float scaleFactor() { return scaleFactor_; }
+  Sophus::SE3f Tbo() { return Tbo_; }
+  float noiseX() const {return NoiseX_;}
+  float noiseY() const {return NoiseY_;}
+  float noiseRotZ_() const {return NoiseRotZ_;}
 
-  float keyFrameSize() { return keyFrameSize_; }
-  float keyFrameLineWidth() { return keyFrameLineWidth_; }
-  float graphLineWidth() { return graphLineWidth_; }
-  float pointSize() { return pointSize_; }
-  float cameraSize() { return cameraSize_; }
-  float cameraLineWidth() { return cameraLineWidth_; }
-  float viewPointX() { return viewPointX_; }
-  float viewPointY() { return viewPointY_; }
-  float viewPointZ() { return viewPointZ_; }
-  float viewPointF() { return viewPointF_; }
-  float imageViewerScale() { return imageViewerScale_; }
+  int nFeatures() const { return nFeatures_; }
+  int nLevels() const { return nLevels_; }
+  float initThFAST() const { return initThFAST_; }
+  float minThFAST() const { return minThFAST_; }
+  float scaleFactor() const { return scaleFactor_; }
+
+  float keyFrameSize() const { return keyFrameSize_; }
+  float keyFrameLineWidth() const { return keyFrameLineWidth_; }
+  float graphLineWidth() const { return graphLineWidth_; }
+  float pointSize() const { return pointSize_; }
+  float cameraSize() const { return cameraSize_; }
+  float cameraLineWidth() const { return cameraLineWidth_; }
+  float viewPointX() const { return viewPointX_; }
+  float viewPointY() const { return viewPointY_; }
+  float viewPointZ() const { return viewPointZ_; }
+  float viewPointF() const { return viewPointF_; }
+  float imageViewerScale() const { return imageViewerScale_; }
 
   std::string atlasLoadFile() { return sLoadFrom_; }
   std::string atlasSaveFile() { return sSaveto_; }
 
-  float thFarPoints() { return thFarPoints_; }
+  float thFarPoints() const { return thFarPoints_; }
 
   cv::Mat M1l() { return M1l_; }
   cv::Mat M2l() { return M2l_; }
@@ -158,6 +163,7 @@ class Settings {
   void readImageInfo(cv::FileStorage& fSettings);
   void readIMU(cv::FileStorage& fSettings);
   void readRGBD(cv::FileStorage& fSettings);
+  void readOdom(cv::FileStorage& fSettings);
   void readORB(cv::FileStorage& fSettings);
   void readViewer(cv::FileStorage& fSettings);
   void readLoadAndSave(cv::FileStorage& fSettings);
@@ -206,6 +212,12 @@ class Settings {
    * RGBD stuff
    */
   float depthMapFactor_;
+
+  /*
+   * WOdometry stuff
+   */
+  float NoiseX_, NoiseY_,NoiseRotZ_;
+  Sophus::SE3f Tbo_;
 
   /*
    * ORB stuff

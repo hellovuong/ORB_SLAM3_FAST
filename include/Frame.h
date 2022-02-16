@@ -30,6 +30,7 @@
 #include "Eigen/Core"
 #include "ImuTypes.h"
 #include "ORBVocabulary.h"
+#include "OdomTypes.h"
 #include "Settings.h"
 #include "Thirdparty/DBoW2/DBoW2/BowVector.h"
 #include "Thirdparty/DBoW2/DBoW2/FeatureVector.h"
@@ -55,43 +56,24 @@ class Frame {
   Frame(const Frame& frame);
 
   // Constructor for stereo cameras.
-  Frame(const cv::Mat& imLeft,
-        const cv::Mat& imRight,
-        const double& timeStamp,
-        ORBextractor* extractorLeft,
-        ORBextractor* extractorRight,
-        ORBVocabulary* voc,
-        cv::Mat& K,
-        cv::Mat& distCoef,
-        const float& bf,
-        const float& thDepth,
-        GeometricCamera* pCamera,
+  Frame(const cv::Mat& imLeft, const cv::Mat& imRight, const double& timeStamp,
+        ORBextractor* extractorLeft, ORBextractor* extractorRight,
+        ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
+        const float& thDepth, GeometricCamera* pCamera,
         Frame* pPrevF = static_cast<Frame*>(NULL),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Constructor for RGB-D cameras.
-  Frame(const cv::Mat& imGray,
-        const cv::Mat& imDepth,
-        const double& timeStamp,
-        ORBextractor* extractor,
-        ORBVocabulary* voc,
-        cv::Mat& K,
-        cv::Mat& distCoef,
-        const float& bf,
-        const float& thDepth,
-        GeometricCamera* pCamera,
-        Frame* pPrevF = static_cast<Frame*>(NULL),
+  Frame(const cv::Mat& imGray, const cv::Mat& imDepth, const double& timeStamp,
+        ORBextractor* extractor, ORBVocabulary* voc, cv::Mat& K,
+        cv::Mat& distCoef, const float& bf, const float& thDepth,
+        GeometricCamera* pCamera, Frame* pPrevF = static_cast<Frame*>(NULL),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Constructor for Monocular cameras.
-  Frame(const cv::Mat& imGray,
-        const double& timeStamp,
-        ORBextractor* extractor,
-        ORBVocabulary* voc,
-        GeometricCamera* pCamera,
-        cv::Mat& distCoef,
-        const float& bf,
-        const float& thDepth,
+  Frame(const cv::Mat& imGray, const double& timeStamp, ORBextractor* extractor,
+        ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat& distCoef,
+        const float& bf, const float& thDepth,
         Frame* pPrevF = static_cast<Frame*>(NULL),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
@@ -139,10 +121,8 @@ class Frame {
   // Compute the cell of a keypoint (return false if outside the grid)
   bool PosInGrid(const cv::KeyPoint& kp, int& posX, int& posY);
 
-  vector<size_t> GetFeaturesInArea(const float& x,
-                                   const float& y,
-                                   const float& r,
-                                   const int minLevel = -1,
+  vector<size_t> GetFeaturesInArea(const float& x, const float& y,
+                                   const float& r, const int minLevel = -1,
                                    const int maxLevel = -1,
                                    const bool bRight = false) const;
 
@@ -288,11 +268,15 @@ class Frame {
 
   // Imu preintegration from last keyframe
   IMU::Preintegrated* mpImuPreintegrated;
+  ODOM::Preintegrated* mpOdomPreintegrated;
+  //  ODOM::Meas mOdomMeas;
+
   KeyFrame* mpLastKeyFrame;
 
   // Pointer to previous frame
   Frame* mpPrevFrame;
   IMU::Preintegrated* mpImuPreintegratedFrame;
+  ODOM::Preintegrated* mpOdomPreintegratedFrame;
 
   // Current and Next Frame id.
   static long unsigned int nNextId;
@@ -371,27 +355,18 @@ class Frame {
   // Grid for the right image
   std::vector<std::size_t> mGridRight[FRAME_GRID_COLS][FRAME_GRID_ROWS];
 
-  Frame(const cv::Mat& imLeft,
-        const cv::Mat& imRight,
-        const double& timeStamp,
-        ORBextractor* extractorLeft,
-        ORBextractor* extractorRight,
-        ORBVocabulary* voc,
-        cv::Mat& K,
-        cv::Mat& distCoef,
-        const float& bf,
-        const float& thDepth,
-        GeometricCamera* pCamera,
-        GeometricCamera* pCamera2,
-        Sophus::SE3f& Tlr,
+  Frame(const cv::Mat& imLeft, const cv::Mat& imRight, const double& timeStamp,
+        ORBextractor* extractorLeft, ORBextractor* extractorRight,
+        ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
+        const float& thDepth, GeometricCamera* pCamera,
+        GeometricCamera* pCamera2, Sophus::SE3f& Tlr,
         Frame* pPrevF = static_cast<Frame*>(NULL),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Stereo fisheye
   void ComputeStereoFishEyeMatches();
 
-  bool isInFrustumChecks(MapPoint* pMP,
-                         float viewingCosLimit,
+  bool isInFrustumChecks(MapPoint* pMP, float viewingCosLimit,
                          bool bRight = false);
 
   Eigen::Vector3f UnprojectStereoFishEye(const int& i);

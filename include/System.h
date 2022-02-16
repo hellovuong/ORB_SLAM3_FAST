@@ -105,7 +105,8 @@ class System {
   // grayscale. Returns the camera pose (empty if tracking fails).
   Sophus::SE3f TrackStereo(
       const cv::Mat& imLeft, const cv::Mat& imRight, const double& timestamp,
-      const vector<IMU::Point>& vImuMeas = vector<IMU::Point>(),
+      const vector<IMU::Point>& vImuMeas = vector<ORB_SLAM3::IMU::Point>(),
+      const vector<ODOM::Meas>& vOdomMeas = vector<ORB_SLAM3::ODOM::Meas>(),
       string filename = "");
 
   // Process the given rgbd frame. Depthmap must be registered to the RGB frame.

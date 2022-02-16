@@ -77,7 +77,7 @@ public:
         return mlNewKeyFrames.size();
     }
 
-    bool IsInitializing();
+    bool IsInitializing() const;
     double GetCurrKFTime();
     KeyFrame* GetCurrKF();
 
@@ -88,17 +88,17 @@ public:
     Eigen::Vector3d mbg;
     Eigen::Vector3d mba;
     double mScale;
-    double mInitTime;
-    double mCostTime;
+    double mInitTime{};
+    double mCostTime{};
 
     unsigned int mInitSect;
     unsigned int mIdxInit;
-    unsigned int mnKFs;
-    double mFirstTs;
+    unsigned int mnKFs{};
+    double mFirstTs{};
     int mnMatchesInliers;
 
     // For debugging (erase in normal mode)
-    int mInitFr;
+    int mInitFr{};
     int mIdxIteration;
     string strSequence;
 
@@ -106,11 +106,11 @@ public:
     bool mbNotBA2;
     bool mbBadImu;
 
-    bool mbWriteStats;
+    bool mbWriteStats{};
 
     // not consider far points (clouds)
-    bool mbFarPoints;
-    float mThFarPoints;
+    bool mbFarPoints{};
+    float mThFarPoints{};
 
 #ifdef REGISTER_TIMES
     vector<double> vdKFInsert_ms;
@@ -148,7 +148,7 @@ protected:
     void ResetIfRequested();
     bool mbResetRequested;
     bool mbResetRequestedActiveMap;
-    Map* mpMapToReset;
+    Map* mpMapToReset{};
     std::mutex mMutexReset;
 
     bool CheckFinish();
@@ -159,12 +159,12 @@ protected:
 
     Atlas* mpAtlas;
 
-    LoopClosing* mpLoopCloser;
-    Tracking* mpTracker;
+    LoopClosing* mpLoopCloser{};
+    Tracking* mpTracker{};
 
     std::list<KeyFrame*> mlNewKeyFrames;
 
-    KeyFrame* mpCurrentKeyFrame;
+    KeyFrame* mpCurrentKeyFrame{};
 
     std::list<MapPoint*> mlpRecentAddedMapPoints;
 
@@ -191,7 +191,7 @@ protected:
 
     float mTinit;
 
-    int countRefinement;
+    int countRefinement{};
 
     //DEBUG
     ofstream f_lm;

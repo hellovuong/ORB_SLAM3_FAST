@@ -176,7 +176,8 @@ Settings::Settings(const std::string& configFile, const int& sensor)
     readRGBD(fSettings);
     cout << "\t-Loaded RGB-D calibration" << endl;
   }
-
+  readOdom(fSettings);
+  cout << "\t-Loaded WODOMETRY settings" << endl;
   readORB(fSettings);
   cout << "\t-Loaded ORB settings" << endl;
   readViewer(fSettings);
@@ -472,7 +473,13 @@ void Settings::readRGBD(cv::FileStorage& fSettings) {
   b_ = readParameter<float>(fSettings, "Stereo.b", found);
   bf_ = b_ * calibration1_->getParameter(0);
 }
-
+void Settings::readOdom(cv::FileStorage& fSettings) {
+  bool found;
+  NoiseX_ = readParameter<float>(fSettings,"Odom.NoiseX",found);
+  NoiseY_ = readParameter<float>(fSettings,"Odom.NoiseY",found);
+  NoiseRotZ_ = readParameter<float>(fSettings,"Odom.NoiseRotZ",found);
+  Tbo_ = Converter::toSophus(readParameter<cv::Mat>(fSettings,"Odom.T_b_o",found));
+}
 void Settings::readORB(cv::FileStorage& fSettings) {
   bool found;
 
