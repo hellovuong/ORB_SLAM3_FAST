@@ -1,0 +1,134 @@
+%YAML:1.0
+File.version: "1.0"
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+Camera.type: "KannalaBrandt8"
+
+# Left Camera calibration and distortion parameters (OpenCV)
+Camera1.fx: 2.8498089599609375e+02
+Camera1.fy: 2.8610238647460938e+02
+Camera1.cx: 4.2524438476562500e+02
+Camera1.cy: 3.9846759033203125e+02
+
+# Kannala-Brandt distortion parameters
+Camera1.k1: -7.3047108016908169e-03
+Camera1.k2: 4.3499931693077087e-02
+Camera1.k3: -4.1283041238784790e-02
+Camera1.k4: 7.6524601317942142e-03
+
+# Right Camera calibration and distortion parameters (OpenCV)
+Camera2.fx: 2.8481259155273438e+02
+Camera2.fy: 2.8597601318359375e+02
+Camera2.cx: 4.2766159057617188e+02
+Camera2.cy: 3.9712341308593750e+02
+
+# Kannala-Brandt distortion parameters
+Camera2.k1: -6.3794981688261032e-03
+Camera2.k2: 4.1455611586570740e-02
+Camera2.k3: -3.9464488625526428e-02
+Camera2.k4: 6.9808149710297585e-03
+
+# Camera resolution
+Camera.width: 848
+Camera.height: 800
+
+# Camera frames per second 
+Camera.fps: 30
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 35.0 # 35
+
+# Transformation matrix from right camera to left camera
+Stereo.T_c1_c2: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data: [ 0.999978,         0.00292986,       0.0059856,   0.0641825273633003,
+           -0.00291792,       0.999994,        -0.0020022,   0.00016650186444167,
+           -0.00599143,       0.00198469,       0.99998,   -0.000164011231390759,
+            0., 0., 0. ,1. ]
+
+# Overlapping area between images (to be updated)
+Camera1.overlappingBegin: 0
+Camera1.overlappingEnd: 848
+
+Camera2.overlappingBegin: 0
+Camera2.overlappingEnd: 848
+#--------------------------------------------------------------------------------------------
+# IMU Parameters
+#--------------------------------------------------------------------------------------------
+
+IMU.T_b_c1: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data:  [-0.99993,          0.00790399,       0.00879027, 0.0106992498040199,
+           -0.00786421,      -0.999959,         0.00455089, 8.41470318846405e-05,
+           0.00882587,       0.00448144,       0.999951,   -9.44368439377286e-05,
+           0., 0., 0. ,1. ]
+
+IMU.NoiseGyro: 0.0032  #5.1480301408446394e-06 #(T265_1hour_square_root) 2.2689e-03 #2.9399585994142933e-03 (T265_1hour) #0.055335   (D455_1hour) #3.0619389333450590e-03
+IMU.NoiseAcc:  0.0163  #6.6952452471014112e-05 #(T265_1hour_square_root) 8.1824e-03 #1.8944022044921720e-02 (T265_1hour) #0.1571     (D455_1hour) #2.4688952269151677e-02
+IMU.GyroWalk:  0.0004  #4.9999999873762135e-07 #(T265_1hour_square_root) 7.0711e-04 #2.1075650081844720e-05 (T265_1hour) #4.0700e-03 (D455_1hour) #1.6565292353593328e-05
+IMU.AccWalk:   0.0049  #9.9999997473787516e-05 #(T265_1hour_square_root) 1.0000e-02 #6.9885217893000603e-04 (T265_1hour) #0.022981   (D455_1hour) #5.2813197466286793e-04
+IMU.Frequency: 200.0
+
+#--------------------------------------------------------------------------------------------
+# WOdometry Parameters
+#--------------------------------------------------------------------------------------------
+Odom.T_b_o: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data:  [
+    -0.00113729264458,    0.999965055267,  0.00828219834348,   0.0545104875654,
+    -0.00206245548802, -0.00828453162111,    0.999963555742,   -0.915839044531,
+       0.999997226418,  0.00112016953136,  0.00207180535294,   -0.228417979642,
+                    0,                 0,                 0,                 1]
+
+Odom.NoiseX: 0.1
+Odom.NoiseY: 0.1
+Odom.NoiseRotZ: 0.1
+
+# Discard far points in the case outdoor
+System.thFarPoints: 20.0  # In TUM outdoors, we ignore points too far away
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1200
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
+
+
