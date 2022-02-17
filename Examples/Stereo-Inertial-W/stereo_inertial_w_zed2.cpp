@@ -318,7 +318,6 @@ int main(int argc, char** argv) {
   } else {
     std::cout << "Saved trajectory " << std::endl;
     SLAM.SaveTrajectoryUZH("CameraTrajectory.txt");
-    SLAM.SaveTrajectoryUZH("KeyFrameTrajectory.txt");
   }
 
   return EXIT_SUCCESS;

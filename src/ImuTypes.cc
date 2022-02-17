@@ -21,6 +21,7 @@
 
 #include "ImuTypes.h"
 
+#include <cmath>
 #include <iostream>
 
 #include "GeometricTools.h"
@@ -31,53 +32,11 @@ namespace IMU {
 
 const float eps = 1e-4;
 
-Eigen::Matrix3f NormalizeRotation(const Eigen::Matrix3f& R) {
-  Eigen::JacobiSVD<Eigen::Matrix3f> svd(
-      R, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  return svd.matrixU() * svd.matrixV().transpose();
-}
-
-Eigen::Matrix3f RightJacobianSO3(const float& x, const float& y,
-                                 const float& z) {
-  Eigen::Matrix3f I;
-  I.setIdentity();
-  const float d2 = x * x + y * y + z * z;
-  const float d = sqrt(d2);
-  Eigen::Vector3f v;
-  v << x, y, z;
-  Eigen::Matrix3f W = Sophus::SO3f::hat(v);
-  if (d < eps) {
-    return I;
-  } else {
-    return I - W * (1.0f - cos(d)) / d2 + W * W * (d - sin(d)) / (d2 * d);
-  }
-}
-
-Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& v) {
-  return RightJacobianSO3(v(0), v(1), v(2));
-}
-
-Eigen::Matrix3f InverseRightJacobianSO3(const float& x, const float& y,
-                                        const float& z) {
-  Eigen::Matrix3f I;
-  I.setIdentity();
-  const float d2 = x * x + y * y + z * z;
-  const float d = sqrt(d2);
-  Eigen::Vector3f v;
-  v << x, y, z;
-  Eigen::Matrix3f W = Sophus::SO3f::hat(v);
-
-  if (d < eps) {
-    return I;
-  } else {
-    return I + W / 2 +
-           W * W * (1.0f / d2 - (1.0f + cos(d)) / (2.0f * d * sin(d)));
-  }
-}
-
-Eigen::Matrix3f InverseRightJacobianSO3(const Eigen::Vector3f& v) {
-  return InverseRightJacobianSO3(v(0), v(1), v(2));
-}
+//Eigen::Matrix3f NormalizeRotation(const Eigen::Matrix3f& R) {
+//  Eigen::JacobiSVD<Eigen::Matrix3f> svd(
+//      R, Eigen::ComputeFullU | Eigen::ComputeFullV);
+//  return svd.matrixU() * svd.matrixV().transpose();
+//}
 
 IntegratedRotation::IntegratedRotation(const Eigen::Vector3f& angVel,
                                        const Bias& imuBias, const float& time) {
@@ -86,7 +45,7 @@ IntegratedRotation::IntegratedRotation(const Eigen::Vector3f& angVel,
   const float z = (angVel(2) - imuBias.bwz) * time;
 
   const float d2 = x * x + y * y + z * z;
-  const float d = sqrt(d2);
+  const double d = std::sqrt(d2);
 
   Eigen::Vector3f v;
   v << x, y, z;
@@ -225,7 +184,8 @@ void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
 
   // Update delta rotation
   IntegratedRotation dRi(angVel, b, dt);
-  dR = NormalizeRotation(dR * dRi.deltaR);
+  //  dR = NormalizeRotation(dR * dRi.deltaR);
+  dR = Eigen::Quaternionf(dR * dRi.deltaR).normalized().toRotationMatrix();
 
   // Compute rotation parts of matrices A and B
   A.block<3, 3>(0, 0) = dRi.deltaR.transpose();
@@ -288,7 +248,10 @@ Eigen::Matrix3f Preintegrated::GetDeltaRotation(const Bias& b_) {
   std::unique_lock<std::mutex> lock(mMutex);
   Eigen::Vector3f dbg;
   dbg << b_.bwx - b.bwx, b_.bwy - b.bwy, b_.bwz - b.bwz;
-  return NormalizeRotation(dR * Sophus::SO3f::exp(JRg * dbg).matrix());
+  return Eigen::Quaternionf(dR * Sophus::SO3f::exp(JRg * dbg).matrix())
+      .normalized()
+      .toRotationMatrix();
+  //  return NormalizeRotation(dR * Sophus::SO3f::exp(JRg * dbg).matrix());
 }
 
 Eigen::Vector3f Preintegrated::GetDeltaVelocity(const Bias& b_) {
@@ -309,7 +272,11 @@ Eigen::Vector3f Preintegrated::GetDeltaPosition(const Bias& b_) {
 
 Eigen::Matrix3f Preintegrated::GetUpdatedDeltaRotation() {
   std::unique_lock<std::mutex> lock(mMutex);
-  return NormalizeRotation(dR * Sophus::SO3f::exp(JRg * db.head(3)).matrix());
+  return Eigen::Quaternionf(dR * Sophus::SO3f::exp(JRg * db.head(3)).matrix())
+      .normalized()
+      .toRotationMatrix();
+  //  return NormalizeRotation(dR * Sophus::SO3f::exp(JRg *
+  //  db.head(3)).matrix());
 }
 
 Eigen::Vector3f Preintegrated::GetUpdatedDeltaVelocity() {

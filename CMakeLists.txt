@@ -44,7 +44,8 @@ MESSAGE("OPENCV VERSION:")
 MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED PATHS "/home/vuong/Code/local_lib")
+#find_package(Pangolin REQUIRED PATHS "/home/vuong/Code/local_lib")
+find_package(Pangolin REQUIRED")
 find_package(realsense2)
 
 find_package(TBB REQUIRED)

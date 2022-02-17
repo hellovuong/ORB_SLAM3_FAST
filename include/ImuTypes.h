@@ -257,16 +257,7 @@ class Preintegrated {
   std::mutex mMutex;
 };
 
-// Lie Algebra Functions
-Eigen::Matrix3f RightJacobianSO3(const float& x, const float& y,
-                                 const float& z);
-Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& v);
-
-Eigen::Matrix3f InverseRightJacobianSO3(const float& x, const float& y,
-                                        const float& z);
-Eigen::Matrix3f InverseRightJacobianSO3(const Eigen::Vector3f& v);
-
-Eigen::Matrix3f NormalizeRotation(const Eigen::Matrix3f& R);
+//Eigen::Matrix3f NormalizeRotation(const Eigen::Matrix3f& R);
 
 }  // namespace IMU
 

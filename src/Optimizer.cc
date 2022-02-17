@@ -512,6 +512,12 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
           eo->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP1));
           eo->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
           optimizer.addEdge(eo);
+
+          //          Sophus::SE3f Twb_orig = pMap->GetOriginKF()->GetImuPose();
+          //          auto* ep = new EdgePlane(Twb_orig);
+          //          ep->setVertex(0,
+          //          dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
+          //          optimizer.addEdge(ep);
         }
       } else
         cout << pKFi->mnId << " or " << pKFi->mPrevKF->mnId << " no imu"
@@ -2529,14 +2535,19 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
                                   .cast<double>()
                                   .inverse();
       vear[i]->setInformation(InfoA);
+      optimizer.addEdge(vear[i]);
 
       if (pKFi->mpOdomPreintegrated) {
-        optimizer.addEdge(vear[i]);
-
         veo[i] = new EdgeWOdometry(pKFi->mpOdomPreintegrated);
         veo[i]->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP1));
         veo[i]->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
         optimizer.addEdge(veo[i]);
+        //                Sophus::SE3f Twb_orig =
+        //                pCurrentMap->GetOriginKF()->GetImuPose();
+        //        auto* ep = new EdgePlane(Twb_orig);
+        //        ep->setVertex(0,
+        //        dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
+        //        optimizer.addEdge(ep);
       }
     } else
       cout << "ERROR building inertial edge" << endl;
@@ -5112,7 +5123,6 @@ void Optimizer::OptimizeEssentialGraph4DoF(
     const LoopClosing::KeyFrameAndPose& NonCorrectedSim3,
     const LoopClosing::KeyFrameAndPose& CorrectedSim3,
     const map<KeyFrame*, set<KeyFrame*>>& LoopConnections) {
-
   // Setup optimizer
   g2o::SparseOptimizer optimizer;
   optimizer.setVerbose(false);

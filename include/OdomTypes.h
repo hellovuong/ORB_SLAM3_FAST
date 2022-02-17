@@ -26,7 +26,7 @@ class Preintegrated {
   Preintegrated(Eigen::Vector3d& vNoises, Sophus::SE3f& Tbo_);
   Preintegrated(Preintegrated* pOdomPre);
   void IntegratedNewMeasurement(Sophus::SE2f& PrevMeas, Sophus::SE2f& CurrMeas);
-
+  void MergePrevious(ODOM::Preintegrated* pPrev);
  public:
   Sophus::SE2f Meas;
   Eigen::Matrix3f Cov, Cov1;

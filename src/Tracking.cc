@@ -591,7 +591,7 @@ void Tracking::NewParameterLoader(Settings* settings) {
 
     mTlr = settings->Tlr();
 
-    mpFrameDrawer->both = true;
+    mpFrameDrawer->both = false;
   }
 
   if (mSensor == System::STEREO || mSensor == System::RGBD ||
@@ -1658,9 +1658,12 @@ bool Tracking::PredictStateIMU() {
     const Eigen::Vector3f Gz(0, 0, -IMU::GRAVITY_VALUE);
     const float t12 = mpImuPreintegratedFromLastKF->dT;
 
-    Eigen::Matrix3f Rwb2 = IMU::NormalizeRotation(
-        Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaRotation(
-                   mpLastKeyFrame->GetImuBias()));
+    Eigen::Matrix3f Rwb2 =
+        Eigen::Quaternionf(Rwb1 *
+                           mpImuPreintegratedFromLastKF->GetDeltaRotation(
+                               mpLastKeyFrame->GetImuBias()))
+            .normalized()
+            .toRotationMatrix();
     Eigen::Vector3f twb2 =
         twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
         Rwb1 * mpImuPreintegratedFromLastKF->GetDeltaPosition(
@@ -1681,9 +1684,12 @@ bool Tracking::PredictStateIMU() {
     const Eigen::Vector3f Gz(0, 0, -IMU::GRAVITY_VALUE);
     const float t12 = mCurrentFrame.mpImuPreintegratedFrame->dT;
 
-    Eigen::Matrix3f Rwb2 = IMU::NormalizeRotation(
-        Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaRotation(
-                   mLastFrame.mImuBias));
+    Eigen::Matrix3f Rwb2 =
+        Eigen::Quaternionf(
+            Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaRotation(
+                       mLastFrame.mImuBias))
+            .normalized()
+            .toRotationMatrix();
     Eigen::Vector3f twb2 =
         twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
         Rwb1 * mCurrentFrame.mpImuPreintegratedFrame->GetDeltaPosition(
@@ -1834,8 +1840,8 @@ void Tracking::PreintegrateOdom() {
           mvOdomFromLastFrame[i + 1].meas, CurrFrameMeas);
       pOdomPreintegratedFromLastFrame->IntegratedNewMeasurement(
           mvOdomFromLastFrame[i + 1].meas, CurrFrameMeas);
-      mpOdomPreintegratedFromLastKF->mvMeasurements.push_back(CurrFrameMeas);
-      pOdomPreintegratedFromLastFrame->mvMeasurements.push_back(CurrFrameMeas);
+      //      mpOdomPreintegratedFromLastKF->mvMeasurements.push_back(CurrFrameMeas);
+      //      pOdomPreintegratedFromLastFrame->mvMeasurements.push_back(CurrFrameMeas);
     }
   }
   //  LastOdomMeas = mvOdomFromLastFrame[mvOdomFromLastFrame.size()];
@@ -1914,7 +1920,17 @@ void Tracking::Track() {
     std::chrono::steady_clock::time_point time_StartPreIMU =
         std::chrono::steady_clock::now();
 #endif
-    PreintegrateIMU();
+    //    PreintegrateIMU();
+    //    // TODO: 2 threads for this and IMU
+    //    if (mSensor == System::IMU_STEREO && mbOdom) {
+    //      PreintegrateOdom();
+    //    }
+
+    std::thread threadIMU(&Tracking::PreintegrateIMU, this);
+    std::thread threadOdom(&Tracking::PreintegrateOdom, this);
+    threadIMU.join();
+    threadOdom.join();
+
 #ifdef REGISTER_TIMES
     std::chrono::steady_clock::time_point time_EndPreIMU =
         std::chrono::steady_clock::now();
@@ -1926,12 +1942,6 @@ void Tracking::Track() {
     vdIMUInteg_ms.push_back(timePreImu);
 #endif
   }
-
-  // TODO: 2 threads for this and IMU
-  if (mSensor == System::IMU_STEREO && mbOdom) {
-    PreintegrateOdom();
-  }
-
   mbCreatedMap = false;
 
   // Get Map Mutex -> Map cannot be changed
@@ -3911,8 +3921,10 @@ void Tracking::UpdateFrameIMU(const float s, const IMU::Bias& b,
     float t12 = mLastFrame.mpImuPreintegrated->dT;
 
     mLastFrame.SetImuPoseVelocity(
-        IMU::NormalizeRotation(
-            Rwb1 * mLastFrame.mpImuPreintegrated->GetUpdatedDeltaRotation()),
+        Eigen::Quaternionf(
+            Rwb1 * mLastFrame.mpImuPreintegrated->GetUpdatedDeltaRotation())
+            .normalized()
+            .toRotationMatrix(),
         twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
             Rwb1 * mLastFrame.mpImuPreintegrated->GetUpdatedDeltaPosition(),
         Vwb1 + Gz * t12 +
@@ -3928,8 +3940,10 @@ void Tracking::UpdateFrameIMU(const float s, const IMU::Bias& b,
     float t12 = mCurrentFrame.mpImuPreintegrated->dT;
 
     mCurrentFrame.SetImuPoseVelocity(
-        IMU::NormalizeRotation(
-            Rwb1 * mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaRotation()),
+        Eigen::Quaternionf(
+            Rwb1 * mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaRotation())
+            .normalized()
+            .toRotationMatrix(),
         twb1 + Vwb1 * t12 + 0.5f * t12 * t12 * Gz +
             Rwb1 * mCurrentFrame.mpImuPreintegrated->GetUpdatedDeltaPosition(),
         Vwb1 + Gz * t12 +

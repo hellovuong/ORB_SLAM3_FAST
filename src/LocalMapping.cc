@@ -211,7 +211,7 @@ void LocalMapping::Run() {
         }
 
         // Check redundant local Keyframes
-        //        KeyFrameCulling();
+        KeyFrameCulling();
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndKFCulling =
@@ -956,6 +956,8 @@ void LocalMapping::KeyFrameCulling() {
           if ((bInitImu && (pKF->mnId < last_ID) && t < 3.) || (t < 0.5)) {
             pKF->mNextKF->mpImuPreintegrated->MergePrevious(
                 pKF->mpImuPreintegrated);
+            pKF->mNextKF->mpOdomPreintegrated->MergePrevious(
+                pKF->mpOdomPreintegrated);
             pKF->mNextKF->mPrevKF = pKF->mPrevKF;
             pKF->mPrevKF->mNextKF = pKF->mNextKF;
             pKF->mNextKF = nullptr;
@@ -967,6 +969,8 @@ void LocalMapping::KeyFrameCulling() {
                      (t < 3)) {
             pKF->mNextKF->mpImuPreintegrated->MergePrevious(
                 pKF->mpImuPreintegrated);
+            pKF->mNextKF->mpOdomPreintegrated->MergePrevious(
+                pKF->mpOdomPreintegrated);
             pKF->mNextKF->mPrevKF = pKF->mPrevKF;
             pKF->mPrevKF->mNextKF = pKF->mNextKF;
             pKF->mNextKF = nullptr;
