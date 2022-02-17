@@ -104,10 +104,8 @@ MLPnPsolver::MLPnPsolver(const Frame& F,
 }
 
 // RANSAC methods
-bool MLPnPsolver::iterate(int nIterations,
-                          bool& bNoMore,
-                          vector<bool>& vbInliers,
-                          int& nInliers,
+bool MLPnPsolver::iterate(int nIterations, bool& bNoMore,
+                          vector<bool>& vbInliers, int& nInliers,
                           Eigen::Matrix4f& Tout) {
   Tout.setIdentity();
   bNoMore = false;
@@ -222,12 +220,9 @@ bool MLPnPsolver::iterate(int nIterations,
   return false;
 }
 
-void MLPnPsolver::SetRansacParameters(double probability,
-                                      int minInliers,
-                                      int maxIterations,
-                                      int minSet,
-                                      float epsilon,
-                                      float th2) {
+void MLPnPsolver::SetRansacParameters(double probability, int minInliers,
+                                      int maxIterations, int minSet,
+                                      float epsilon, float th2) {
   mRansacProb = probability;
   mRansacMinInliers = minInliers;
   mRansacMaxIts = maxIterations;
@@ -351,8 +346,7 @@ bool MLPnPsolver::Refine() {
 }
 
 // MLPnP methods
-void MLPnPsolver::computePose(const bearingVectors_t& f,
-                              const points_t& p,
+void MLPnPsolver::computePose(const bearingVectors_t& f, const points_t& p,
                               const cov3_mats_t& covMats,
                               const std::vector<int>& indices,
                               transformation_t& result) {
@@ -614,8 +608,8 @@ void MLPnPsolver::computePose(const bearingVectors_t& f,
     // test if we found a good rotation matrix
     if (Rout.determinant() < 0) Rout *= -1.0;
     // scale translation
-    tout = Rout * (scale * translation_t(
-                               result1(9, 0), result1(10, 0), result1(11, 0)));
+    tout = Rout * (scale * translation_t(result1(9, 0), result1(10, 0),
+                                         result1(11, 0)));
 
     // find correct direction in terms of reprojection error, just take the
     // first 6 correspondences
@@ -697,8 +691,7 @@ Eigen::Vector3d MLPnPsolver::rot2rodrigues(const Eigen::Matrix3d& R) {
   return omega;
 }
 
-void MLPnPsolver::mlpnp_gn(Eigen::VectorXd& x,
-                           const points_t& pts,
+void MLPnPsolver::mlpnp_gn(Eigen::VectorXd& x, const points_t& pts,
                            const std::vector<Eigen::MatrixXd>& nullspaces,
                            const Eigen::SparseMatrix<double> Kll,
                            bool use_cov) {
@@ -765,12 +758,9 @@ void MLPnPsolver::mlpnp_gn(Eigen::VectorXd& x,
 }
 
 void MLPnPsolver::mlpnp_residuals_and_jacs(
-    const Eigen::VectorXd& x,
-    const points_t& pts,
-    const std::vector<Eigen::MatrixXd>& nullspaces,
-    Eigen::VectorXd& r,
-    Eigen::MatrixXd& fjac,
-    bool getJacs) {
+    const Eigen::VectorXd& x, const points_t& pts,
+    const std::vector<Eigen::MatrixXd>& nullspaces, Eigen::VectorXd& r,
+    Eigen::MatrixXd& fjac, bool getJacs) {
   rodrigues_t w(x[0], x[1], x[2]);
   translation_t T(x[3], x[4], x[5]);
 
@@ -813,8 +803,7 @@ void MLPnPsolver::mlpnp_residuals_and_jacs(
 void MLPnPsolver::mlpnpJacs(const point_t& pt,
                             const Eigen::Vector3d& nullspace_r,
                             const Eigen::Vector3d& nullspace_s,
-                            const rodrigues_t& w,
-                            const translation_t& t,
+                            const rodrigues_t& w, const translation_t& t,
                             Eigen::MatrixXd& jacs) {
   double r1 = nullspace_r[0];
   double r2 = nullspace_r[1];

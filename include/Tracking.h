@@ -24,7 +24,6 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
-#include "Thirdparty/Sophus/sophus/interpolate.hpp"
 #include "Atlas.h"
 #include "Frame.h"
 #include "FrameDrawer.h"
@@ -38,6 +37,7 @@
 #include "OdomTypes.h"
 #include "Settings.h"
 #include "System.h"
+#include "Thirdparty/Sophus/sophus/interpolate.hpp"
 #include "Viewer.h"
 
 #include "GeometricCamera.h"
@@ -272,7 +272,7 @@ class Tracking {
 
   // Vector of IMU measurements from previous to current frame
   std::vector<ODOM::Meas> mvOdomFromLastFrame;
-//  ORB_SLAM3::ODOM::Meas LastOdomMeas;
+  //  ORB_SLAM3::ODOM::Meas LastOdomMeas;
 
   // Preintegrated of Odometry measurement from Last KF
   ODOM::Preintegrated* mpOdomPreintegratedFromLastKF;

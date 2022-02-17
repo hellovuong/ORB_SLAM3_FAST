@@ -306,7 +306,7 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
 
       vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
 
-      for (auto & vpKF : vpKFs) {
+      for (auto& vpKF : vpKFs) {
         KeyFrame* pKF = vpKF;
         Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
         unsigned int index_color = pKF->mnOriginMapId;

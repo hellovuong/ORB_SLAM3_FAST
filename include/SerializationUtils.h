@@ -33,8 +33,7 @@
 namespace ORB_SLAM3 {
 
 template <class Archive>
-void serializeSophusSE3(Archive& ar,
-                        Sophus::SE3f& T,
+void serializeSophusSE3(Archive& ar, Sophus::SE3f& T,
                         const unsigned int version) {
   Eigen::Vector4f quat;
   Eigen::Vector3f transl;
@@ -100,8 +99,7 @@ void serializeMatrix(Archive& ar, cv::Mat& mat, const unsigned int version) {
 }
 
 template <class Archive>
-void serializeMatrix(Archive& ar,
-                     const cv::Mat& mat,
+void serializeMatrix(Archive& ar, const cv::Mat& mat,
                      const unsigned int version) {
   cv::Mat matAux = mat;
 
@@ -115,8 +113,7 @@ void serializeMatrix(Archive& ar,
 }
 
 template <class Archive>
-void serializeVectorKeyPoints(Archive& ar,
-                              const std::vector<cv::KeyPoint>& vKP,
+void serializeVectorKeyPoints(Archive& ar, const std::vector<cv::KeyPoint>& vKP,
                               const unsigned int version) {
   int NumEl;
 

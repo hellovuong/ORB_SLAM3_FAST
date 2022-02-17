@@ -103,14 +103,9 @@ class MapPoint {
   MapPoint();
 
   MapPoint(const Eigen::Vector3f& Pos, KeyFrame* pRefKF, Map* pMap);
-  MapPoint(const double invDepth,
-           cv::Point2f uv_init,
-           KeyFrame* pRefKF,
-           KeyFrame* pHostKF,
-           Map* pMap);
-  MapPoint(const Eigen::Vector3f& Pos,
-           Map* pMap,
-           Frame* pFrame,
+  MapPoint(const double invDepth, cv::Point2f uv_init, KeyFrame* pRefKF,
+           KeyFrame* pHostKF, Map* pMap);
+  MapPoint(const Eigen::Vector3f& Pos, Map* pMap, Frame* pFrame,
            const int& idxF);
 
   void SetWorldPos(const Eigen::Vector3f& Pos);

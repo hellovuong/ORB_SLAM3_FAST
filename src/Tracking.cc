@@ -1834,8 +1834,8 @@ void Tracking::PreintegrateOdom() {
           mvOdomFromLastFrame[i + 1].meas, CurrFrameMeas);
       pOdomPreintegratedFromLastFrame->IntegratedNewMeasurement(
           mvOdomFromLastFrame[i + 1].meas, CurrFrameMeas);
-    mpOdomPreintegratedFromLastKF->mvMeasurements.push_back(CurrFrameMeas);
-    pOdomPreintegratedFromLastFrame->mvMeasurements.push_back(CurrFrameMeas);
+      mpOdomPreintegratedFromLastKF->mvMeasurements.push_back(CurrFrameMeas);
+      pOdomPreintegratedFromLastFrame->mvMeasurements.push_back(CurrFrameMeas);
     }
   }
   //  LastOdomMeas = mvOdomFromLastFrame[mvOdomFromLastFrame.size()];
@@ -3220,7 +3220,7 @@ void Tracking::CreateNewKeyFrame() {
           bCreateNew = true;
         else if (pMP->Observations() < 1) {
           bCreateNew = true;
-          mCurrentFrame.mvpMapPoints[i] = static_cast<MapPoint*>(NULL);
+          mCurrentFrame.mvpMapPoints[i] = static_cast<MapPoint*>(nullptr);
         }
 
         if (bCreateNew) {

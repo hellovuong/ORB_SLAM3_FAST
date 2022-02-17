@@ -44,18 +44,13 @@ class Map;
 class LoopClosing {
  public:
   typedef pair<set<KeyFrame*>, int> ConsistentGroup;
-  typedef map<KeyFrame*,
-              g2o::Sim3,
-              std::less<KeyFrame*>,
+  typedef map<KeyFrame*, g2o::Sim3, std::less<KeyFrame*>,
               Eigen::aligned_allocator<std::pair<KeyFrame* const, g2o::Sim3> > >
       KeyFrameAndPose;
 
  public:
-  LoopClosing(Atlas* pAtlas,
-              KeyFrameDatabase* pDB,
-              ORBVocabulary* pVoc,
-              const bool bFixScale,
-              const bool bActiveLC);
+  LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB, ORBVocabulary* pVoc,
+              const bool bFixScale, const bool bActiveLC);
 
   void SetTracker(Tracking* pTracker);
 
@@ -125,26 +120,21 @@ class LoopClosing {
   // Methods to implement the new place recognition algorithm
   bool NewDetectCommonRegions();
   bool DetectAndReffineSim3FromLastKF(KeyFrame* pCurrentKF,
-                                      KeyFrame* pMatchedKF,
-                                      g2o::Sim3& gScw,
+                                      KeyFrame* pMatchedKF, g2o::Sim3& gScw,
                                       int& nNumProjMatches,
                                       std::vector<MapPoint*>& vpMPs,
                                       std::vector<MapPoint*>& vpMatchedMPs);
   bool DetectCommonRegionsFromBoW(std::vector<KeyFrame*>& vpBowCand,
                                   KeyFrame*& pMatchedKF,
-                                  KeyFrame*& pLastCurrentKF,
-                                  g2o::Sim3& g2oScw,
+                                  KeyFrame*& pLastCurrentKF, g2o::Sim3& g2oScw,
                                   int& nNumCoincidences,
                                   std::vector<MapPoint*>& vpMPs,
                                   std::vector<MapPoint*>& vpMatchedMPs);
-  bool DetectCommonRegionsFromLastKF(KeyFrame* pCurrentKF,
-                                     KeyFrame* pMatchedKF,
-                                     g2o::Sim3& gScw,
-                                     int& nNumProjMatches,
+  bool DetectCommonRegionsFromLastKF(KeyFrame* pCurrentKF, KeyFrame* pMatchedKF,
+                                     g2o::Sim3& gScw, int& nNumProjMatches,
                                      std::vector<MapPoint*>& vpMPs,
                                      std::vector<MapPoint*>& vpMatchedMPs);
-  int FindMatchesByProjection(KeyFrame* pCurrentKF,
-                              KeyFrame* pMatchedKFw,
+  int FindMatchesByProjection(KeyFrame* pCurrentKF, KeyFrame* pMatchedKFw,
                               g2o::Sim3& g2oScw,
                               set<MapPoint*>& spMatchedMPinOrigin,
                               vector<MapPoint*>& vpMapPoints,

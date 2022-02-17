@@ -81,10 +81,9 @@ class EdgeSE3ProjectXYZOnlyPoseToBody
   g2o::SE3Quat mTrl;
 };
 
-class EdgeSE3ProjectXYZ : public g2o::BaseBinaryEdge<2,
-                                                     Eigen::Vector2d,
-                                                     g2o::VertexSBAPointXYZ,
-                                                     g2o::VertexSE3Expmap> {
+class EdgeSE3ProjectXYZ
+    : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, g2o::VertexSBAPointXYZ,
+                                 g2o::VertexSE3Expmap> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -117,9 +116,7 @@ class EdgeSE3ProjectXYZ : public g2o::BaseBinaryEdge<2,
 };
 
 class EdgeSE3ProjectXYZToBody
-    : public g2o::BaseBinaryEdge<2,
-                                 Eigen::Vector2d,
-                                 g2o::VertexSBAPointXYZ,
+    : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, g2o::VertexSBAPointXYZ,
                                  g2o::VertexSE3Expmap> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -178,9 +175,7 @@ class VertexSim3Expmap : public g2o::BaseVertex<7, g2o::Sim3> {
 };
 
 class EdgeSim3ProjectXYZ
-    : public g2o::BaseBinaryEdge<2,
-                                 Eigen::Vector2d,
-                                 g2o::VertexSBAPointXYZ,
+    : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, g2o::VertexSBAPointXYZ,
                                  ORB_SLAM3::VertexSim3Expmap> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -202,9 +197,7 @@ class EdgeSim3ProjectXYZ
 };
 
 class EdgeInverseSim3ProjectXYZ
-    : public g2o::BaseBinaryEdge<2,
-                                 Eigen::Vector2d,
-                                 g2o::VertexSBAPointXYZ,
+    : public g2o::BaseBinaryEdge<2, Eigen::Vector2d, g2o::VertexSBAPointXYZ,
                                  VertexSim3Expmap> {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

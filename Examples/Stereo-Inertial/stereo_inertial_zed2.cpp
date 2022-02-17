@@ -34,15 +34,11 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
 int main(int argc, char** argv) {
   if (argc < 4) {
@@ -249,10 +245,8 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/zed2_left.txt";
   string strPathTimesRight = strPathFolder + "/zed2_right.txt";
@@ -298,10 +292,8 @@ void LoadImages(const string& strPathFolder,
   }
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);

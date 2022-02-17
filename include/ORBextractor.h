@@ -35,9 +35,7 @@ class ExtractorNode {
  public:
   ExtractorNode() : bNoMore(false) {}
 
-  void DivideNode(ExtractorNode& n1,
-                  ExtractorNode& n2,
-                  ExtractorNode& n3,
+  void DivideNode(ExtractorNode& n1, ExtractorNode& n2, ExtractorNode& n3,
                   ExtractorNode& n4);
 
   std::vector<cv::KeyPoint> vKeys;
@@ -50,10 +48,7 @@ class ORBextractor {
  public:
   enum { HARRIS_SCORE = 0, FAST_SCORE = 1 };
 
-  ORBextractor(int nfeatures,
-               float scaleFactor,
-               int nlevels,
-               int iniThFAST,
+  ORBextractor(int nfeatures, float scaleFactor, int nlevels, int iniThFAST,
                int minThFAST);
 
   ~ORBextractor() {}
@@ -61,11 +56,9 @@ class ORBextractor {
   // Compute the ORB features and descriptors on an image.
   // ORB are dispersed on the image using an octree.
   // Mask is ignored in the current implementation.
-  int operator()(cv::InputArray _image,
-                 cv::InputArray _mask,
+  int operator()(cv::InputArray _image, cv::InputArray _mask,
                  std::vector<cv::KeyPoint>& _keypoints,
-                 cv::OutputArray _descriptors,
-                 std::vector<int>& vLappingArea);
+                 cv::OutputArray _descriptors, std::vector<int>& vLappingArea);
 
   int inline GetLevels() { return nlevels; }
 
@@ -92,12 +85,8 @@ class ORBextractor {
   void ComputeKeyPointsOctTree_(
       std::vector<std::vector<cv::KeyPoint> >& allKeypoints);
   std::vector<cv::KeyPoint> DistributeOctTree(
-      const std::vector<cv::KeyPoint>& vToDistributeKeys,
-      const int& minX,
-      const int& maxX,
-      const int& minY,
-      const int& maxY,
-      const int& nFeatures,
+      const std::vector<cv::KeyPoint>& vToDistributeKeys, const int& minX,
+      const int& maxX, const int& minY, const int& maxY, const int& nFeatures,
       const int& level) const;
 
   std::vector<cv::Point> pattern;

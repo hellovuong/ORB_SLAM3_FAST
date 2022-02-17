@@ -45,10 +45,8 @@ class MapDrawer {
   Atlas* mpAtlas;
 
   void DrawMapPoints() const;
-  void DrawKeyFrames(const bool bDrawKF,
-                     const bool bDrawGraph,
-                     const bool bDrawInertialGraph,
-                     const bool bDrawOptLba);
+  void DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
+                     const bool bDrawInertialGraph, const bool bDrawOptLba);
   void DrawCurrentCamera(pangolin::OpenGlMatrix& Twc) const;
   void SetCurrentCameraPose(const Sophus::SE3f& Tcw);
   void SetReferenceKeyFrame(KeyFrame* pKF);
@@ -69,12 +67,9 @@ class MapDrawer {
 
   std::mutex mMutexCamera;
 
-  float mfFrameColors[6][3] = {{0.0f, 0.0f, 1.0f},
-                               {0.8f, 0.4f, 1.0f},
-                               {1.0f, 0.2f, 0.4f},
-                               {0.6f, 0.0f, 1.0f},
-                               {1.0f, 1.0f, 0.0f},
-                               {0.0f, 1.0f, 1.0f}};
+  float mfFrameColors[6][3] = {{0.0f, 0.0f, 1.0f}, {0.8f, 0.4f, 1.0f},
+                               {1.0f, 0.2f, 0.4f}, {0.6f, 0.0f, 1.0f},
+                               {1.0f, 1.0f, 0.0f}, {0.0f, 1.0f, 1.0f}};
 };
 
 }  // namespace ORB_SLAM3

@@ -114,8 +114,7 @@ class Map {
   void SetImuInitialized();
   bool isImuInitialized();
 
-  void ApplyScaledRotation(const Sophus::SE3f& T,
-                           const float s,
+  void ApplyScaledRotation(const Sophus::SE3f& T, const float s,
                            const bool bScaledVel = false);
 
   void SetInertialSensor();
@@ -139,8 +138,7 @@ class Map {
       map<unsigned int, GeometricCamera*>& mpCams);
 
   void printReprojectionError(list<KeyFrame*>& lpLocalWindowKFs,
-                              KeyFrame* mpCurrentKF,
-                              string& name,
+                              KeyFrame* mpCurrentKF, string& name,
                               string& name_folder);
 
   vector<KeyFrame*> mvpKeyFrameOrigins;

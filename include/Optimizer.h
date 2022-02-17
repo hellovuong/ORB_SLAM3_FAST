@@ -48,6 +48,9 @@ class LoopClosing;
 
 class Optimizer {
  public:
+  static bool sortByVal(const pair<MapPoint*, int>& a, const pair<MapPoint*, int>& b) {
+    return (a.second < b.second);
+  }
   void static BundleAdjustment(const std::vector<KeyFrame*>& vpKF,
                                const std::vector<MapPoint*>& vpMP,
                                int nIterations = 5, bool* pbStopFlag = nullptr,
@@ -115,7 +118,7 @@ class Optimizer {
   // Local BA in welding area when two maps are merged
   void static LocalBundleAdjustment(KeyFrame* pMainKF,
                                     vector<KeyFrame*> vpAdjustKF,
-                                    vector<KeyFrame*> vpFixedKF,
+                                    const vector<KeyFrame*>& vpFixedKF,
                                     bool* pbStopFlag);
 
   // Marginalize block element (start:end,start:end). Perform Schur complement.

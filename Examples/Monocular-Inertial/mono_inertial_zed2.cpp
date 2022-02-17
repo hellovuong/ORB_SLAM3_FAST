@@ -34,14 +34,11 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
                 vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
 int main(int argc, char** argv) {
   if (argc < 4) {
@@ -89,8 +86,7 @@ int main(int argc, char** argv) {
 
     string pathImu = pathSeq + "/zed2_imu.txt";
 
-    LoadImages(
-        pathSeq, vstrImageLeft[seq], vTimestampsCam[seq]);
+    LoadImages(pathSeq, vstrImageLeft[seq], vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
     cout << "Loading IMU for sequence " << seq << "...";
@@ -129,7 +125,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_MONOCULAR, true);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_MONOCULAR,
+                         true);
 
   cv::Mat imLeft, imRight;
   for (seq = 0; seq < num_seq; seq++) {
@@ -158,14 +155,11 @@ int main(int argc, char** argv) {
                 [seq]
                 [ni])  // while(vTimestampsImu[first_imu]<=vTimestampsCam[ni])
         {
-          vImuMeas.push_back(
-              ORB_SLAM3::IMU::Point(vAcc[seq][first_imu[seq]].x,
-                                    vAcc[seq][first_imu[seq]].y,
-                                    vAcc[seq][first_imu[seq]].z,
-                                    vGyro[seq][first_imu[seq]].x,
-                                    vGyro[seq][first_imu[seq]].y,
-                                    vGyro[seq][first_imu[seq]].z,
-                                    vTimestampsImu[seq][first_imu[seq]]));
+          vImuMeas.push_back(ORB_SLAM3::IMU::Point(
+              vAcc[seq][first_imu[seq]].x, vAcc[seq][first_imu[seq]].y,
+              vAcc[seq][first_imu[seq]].z, vGyro[seq][first_imu[seq]].x,
+              vGyro[seq][first_imu[seq]].y, vGyro[seq][first_imu[seq]].z,
+              vTimestampsImu[seq][first_imu[seq]]));
           first_imu[seq]++;
         }
 
@@ -234,8 +228,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
                 vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/zed2_times_left.txt";
@@ -262,10 +255,8 @@ void LoadImages(const string& strPathFolder,
   fTimes.close();
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);

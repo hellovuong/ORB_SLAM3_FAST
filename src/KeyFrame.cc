@@ -739,9 +739,9 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y,
       const vector<size_t> vCell =
           (!bRight) ? mGrid[ix][iy] : mGridRight[ix][iy];
       for (unsigned long j : vCell) {
-        const cv::KeyPoint &kpUn = (NLeft == -1) ? mvKeysUn[j]
-                                   : (!bRight)   ? mvKeys[j]
-                                                 : mvKeysRight[j];
+        const cv::KeyPoint &kpUn = (NLeft == -1)
+                                       ? mvKeysUn[j]
+                                       : (!bRight) ? mvKeys[j] : mvKeysRight[j];
         const float distx = kpUn.pt.x - x;
         const float disty = kpUn.pt.y - y;
 

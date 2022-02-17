@@ -35,8 +35,7 @@ namespace ORB_SLAM3 {
 
 template <>
 float Settings::readParameter<float>(cv::FileStorage& fSettings,
-                                     const std::string& name,
-                                     bool& found,
+                                     const std::string& name, bool& found,
                                      const bool required) {
   cv::FileNode node = fSettings[name];
   if (node.empty()) {
@@ -61,8 +60,7 @@ float Settings::readParameter<float>(cv::FileStorage& fSettings,
 
 template <>
 int Settings::readParameter<int>(cv::FileStorage& fSettings,
-                                 const std::string& name,
-                                 bool& found,
+                                 const std::string& name, bool& found,
                                  const bool required) {
   cv::FileNode node = fSettings[name];
   if (node.empty()) {
@@ -87,8 +85,7 @@ int Settings::readParameter<int>(cv::FileStorage& fSettings,
 
 template <>
 string Settings::readParameter<string>(cv::FileStorage& fSettings,
-                                       const std::string& name,
-                                       bool& found,
+                                       const std::string& name, bool& found,
                                        const bool required) {
   cv::FileNode node = fSettings[name];
   if (node.empty()) {
@@ -113,8 +110,7 @@ string Settings::readParameter<string>(cv::FileStorage& fSettings,
 
 template <>
 cv::Mat Settings::readParameter<cv::Mat>(cv::FileStorage& fSettings,
-                                         const std::string& name,
-                                         bool& found,
+                                         const std::string& name, bool& found,
                                          const bool required) {
   cv::FileNode node = fSettings[name];
   if (node.empty()) {
@@ -475,10 +471,11 @@ void Settings::readRGBD(cv::FileStorage& fSettings) {
 }
 void Settings::readOdom(cv::FileStorage& fSettings) {
   bool found;
-  NoiseX_ = readParameter<float>(fSettings,"Odom.NoiseX",found);
-  NoiseY_ = readParameter<float>(fSettings,"Odom.NoiseY",found);
-  NoiseRotZ_ = readParameter<float>(fSettings,"Odom.NoiseRotZ",found);
-  Tbo_ = Converter::toSophus(readParameter<cv::Mat>(fSettings,"Odom.T_b_o",found));
+  NoiseX_ = readParameter<float>(fSettings, "Odom.NoiseX", found);
+  NoiseY_ = readParameter<float>(fSettings, "Odom.NoiseY", found);
+  NoiseRotZ_ = readParameter<float>(fSettings, "Odom.NoiseRotZ", found);
+  Tbo_ = Converter::toSophus(
+      readParameter<cv::Mat>(fSettings, "Odom.T_b_o", found));
 }
 void Settings::readORB(cv::FileStorage& fSettings) {
   bool found;
@@ -516,8 +513,8 @@ void Settings::readViewer(cv::FileStorage& fSettings) {
 void Settings::readLoadAndSave(cv::FileStorage& fSettings) {
   bool found;
 
-  sLoadFrom_ = readParameter<string>(
-      fSettings, "System.LoadAtlasFromFile", found, false);
+  sLoadFrom_ = readParameter<string>(fSettings, "System.LoadAtlasFromFile",
+                                     found, false);
   sSaveto_ =
       readParameter<string>(fSettings, "System.SaveAtlasToFile", found, false);
 }
@@ -546,37 +543,15 @@ void Settings::precomputeRectificationMaps() {
   cv::Mat R_r1_u1, R_r2_u2;
   cv::Mat P1, P2, Q;
 
-  cv::stereoRectify(K1,
-                    camera1DistortionCoef(),
-                    K2,
-                    camera2DistortionCoef(),
-                    newImSize_,
-                    R12,
-                    t12,
-                    R_r1_u1,
-                    R_r2_u2,
-                    P1,
-                    P2,
-                    Q,
-                    cv::CALIB_ZERO_DISPARITY,
-                    -1,
-                    newImSize_);
-  cv::initUndistortRectifyMap(K1,
-                              camera1DistortionCoef(),
-                              R_r1_u1,
-                              P1.rowRange(0, 3).colRange(0, 3),
-                              newImSize_,
-                              CV_32F,
-                              M1l_,
-                              M2l_);
-  cv::initUndistortRectifyMap(K2,
-                              camera2DistortionCoef(),
-                              R_r2_u2,
-                              P2.rowRange(0, 3).colRange(0, 3),
-                              newImSize_,
-                              CV_32F,
-                              M1r_,
-                              M2r_);
+  cv::stereoRectify(K1, camera1DistortionCoef(), K2, camera2DistortionCoef(),
+                    newImSize_, R12, t12, R_r1_u1, R_r2_u2, P1, P2, Q,
+                    cv::CALIB_ZERO_DISPARITY, -1, newImSize_);
+  cv::initUndistortRectifyMap(K1, camera1DistortionCoef(), R_r1_u1,
+                              P1.rowRange(0, 3).colRange(0, 3), newImSize_,
+                              CV_32F, M1l_, M2l_);
+  cv::initUndistortRectifyMap(K2, camera2DistortionCoef(), R_r2_u2,
+                              P2.rowRange(0, 3).colRange(0, 3), newImSize_,
+                              CV_32F, M1r_, M2r_);
 
   // Update calibration
   calibration1_->setParameter(P1.at<double>(0, 0), 0);
@@ -630,7 +605,7 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
     } else {
       output << "Kannala-Brandt";
     }
-    if(settings.originalCalib2_!=static_cast<GeometricCamera*>(NULL)) {
+    if (settings.originalCalib2_ != static_cast<GeometricCamera*>(NULL)) {
       output << ""
              << ": [";
       for (size_t i = 0; i < settings.originalCalib2_->size(); i++) {

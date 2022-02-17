@@ -33,17 +33,13 @@
 
 using namespace std;
 
-void LoadImagesTUMVI(const string& strPathLeft,
-                     const string& strPathRight,
-                     const string& strPathTimes,
-                     vector<string>& vstrImageLeft,
+void LoadImagesTUMVI(const string& strPathLeft, const string& strPathRight,
+                     const string& strPathTimes, vector<string>& vstrImageLeft,
                      vector<string>& vstrImageRight,
                      vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
 double ttrack_tot = 0;
 int main(int argc, char** argv) {
@@ -85,12 +81,10 @@ int main(int argc, char** argv) {
   int tot_images = 0;
   for (seq = 0; seq < num_seq; seq++) {
     cout << "Loading images for sequence " << seq << "...";
-    LoadImagesTUMVI(string(argv[4 * (seq + 1) - 1]),
-                    string(argv[4 * (seq + 1)]),
-                    string(argv[4 * (seq + 1) + 1]),
-                    vstrImageLeftFilenames[seq],
-                    vstrImageRightFilenames[seq],
-                    vTimestampsCam[seq]);
+    LoadImagesTUMVI(
+        string(argv[4 * (seq + 1) - 1]), string(argv[4 * (seq + 1)]),
+        string(argv[4 * (seq + 1) + 1]), vstrImageLeftFilenames[seq],
+        vstrImageRightFilenames[seq], vTimestampsCam[seq]);
     cout << "Total images: " << vstrImageLeftFilenames[seq].size() << endl;
     cout << "Total cam ts: " << vTimestampsCam[seq].size() << endl;
     cout << "first cam ts: " << vTimestampsCam[seq][0] << endl;
@@ -98,9 +92,7 @@ int main(int argc, char** argv) {
     cout << "LOADED!" << endl;
 
     cout << "Loading IMU for sequence " << seq << "...";
-    LoadIMU(string(argv[4 * (seq + 1) + 2]),
-            vTimestampsImu[seq],
-            vAcc[seq],
+    LoadIMU(string(argv[4 * (seq + 1) + 2]), vTimestampsImu[seq], vAcc[seq],
             vGyro[seq]);
     cout << "Total IMU meas: " << vTimestampsImu[seq].size() << endl;
     cout << "first IMU ts: " << vTimestampsImu[seq][0] << endl;
@@ -135,8 +127,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(
-      argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true, 0, file_name);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true,
+                         0, file_name);
   float imageScale = SLAM.GetImageScale();
 
   double t_resize = 0.f;
@@ -207,14 +199,11 @@ int main(int argc, char** argv) {
 
         while (vTimestampsImu[seq][first_imu[seq]] <= vTimestampsCam[seq][ni]) {
           // vImuMeas.push_back(ORB_SLAM3::IMU::Point(vAcc[first_imu],vGyro[first_imu],vTimestampsImu[first_imu]));
-          vImuMeas.push_back(
-              ORB_SLAM3::IMU::Point(vAcc[seq][first_imu[seq]].x,
-                                    vAcc[seq][first_imu[seq]].y,
-                                    vAcc[seq][first_imu[seq]].z,
-                                    vGyro[seq][first_imu[seq]].x,
-                                    vGyro[seq][first_imu[seq]].y,
-                                    vGyro[seq][first_imu[seq]].z,
-                                    vTimestampsImu[seq][first_imu[seq]]));
+          vImuMeas.push_back(ORB_SLAM3::IMU::Point(
+              vAcc[seq][first_imu[seq]].x, vAcc[seq][first_imu[seq]].y,
+              vAcc[seq][first_imu[seq]].z, vGyro[seq][first_imu[seq]].x,
+              vGyro[seq][first_imu[seq]].y, vGyro[seq][first_imu[seq]].z,
+              vTimestampsImu[seq][first_imu[seq]]));
           // cout << "t_imu = " << fixed << vImuMeas.back().t << endl;
           first_imu[seq]++;
         }
@@ -309,10 +298,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImagesTUMVI(const string& strPathLeft,
-                     const string& strPathRight,
-                     const string& strPathTimes,
-                     vector<string>& vstrImageLeft,
+void LoadImagesTUMVI(const string& strPathLeft, const string& strPathRight,
+                     const string& strPathTimes, vector<string>& vstrImageLeft,
                      vector<string>& vstrImageRight,
                      vector<double>& vTimeStamps) {
   ifstream fTimes;
@@ -342,10 +329,8 @@ void LoadImagesTUMVI(const string& strPathLeft,
   }
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);

@@ -37,8 +37,7 @@ Eigen::Matrix3f NormalizeRotation(const Eigen::Matrix3f& R) {
   return svd.matrixU() * svd.matrixV().transpose();
 }
 
-Eigen::Matrix3f RightJacobianSO3(const float& x,
-                                 const float& y,
+Eigen::Matrix3f RightJacobianSO3(const float& x, const float& y,
                                  const float& z) {
   Eigen::Matrix3f I;
   I.setIdentity();
@@ -58,8 +57,7 @@ Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& v) {
   return RightJacobianSO3(v(0), v(1), v(2));
 }
 
-Eigen::Matrix3f InverseRightJacobianSO3(const float& x,
-                                        const float& y,
+Eigen::Matrix3f InverseRightJacobianSO3(const float& x, const float& y,
                                         const float& z) {
   Eigen::Matrix3f I;
   I.setIdentity();
@@ -82,8 +80,7 @@ Eigen::Matrix3f InverseRightJacobianSO3(const Eigen::Vector3f& v) {
 }
 
 IntegratedRotation::IntegratedRotation(const Eigen::Vector3f& angVel,
-                                       const Bias& imuBias,
-                                       const float& time) {
+                                       const Bias& imuBias, const float& time) {
   const float x = (angVel(0) - imuBias.bwx) * time;
   const float y = (angVel(1) - imuBias.bwy) * time;
   const float z = (angVel(2) - imuBias.bwz) * time;
@@ -179,8 +176,7 @@ void Preintegrated::Reintegrate() {
   std::unique_lock<std::mutex> lock(mMutex);
   const std::vector<integrable> aux = mvMeasurements;
   Initialize(bu);
-  for (const auto & i : aux)
-    IntegrateNewMeasurement(i.a, i.w, i.t);
+  for (const auto& i : aux) IntegrateNewMeasurement(i.a, i.w, i.t);
 }
 
 void Preintegrated::IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
@@ -284,12 +280,8 @@ void Preintegrated::SetNewBias(const Bias& bu_) {
 
 IMU::Bias Preintegrated::GetDeltaBias(const Bias& b_) {
   std::unique_lock<std::mutex> lock(mMutex);
-  return IMU::Bias(b_.bax - b.bax,
-                   b_.bay - b.bay,
-                   b_.baz - b.baz,
-                   b_.bwx - b.bwx,
-                   b_.bwy - b.bwy,
-                   b_.bwz - b.bwz);
+  return IMU::Bias(b_.bax - b.bax, b_.bay - b.bay, b_.baz - b.baz,
+                   b_.bwx - b.bwx, b_.bwy - b.bwy, b_.bwz - b.bwz);
 }
 
 Eigen::Matrix3f Preintegrated::GetDeltaRotation(const Bias& b_) {
@@ -386,11 +378,8 @@ std::ostream& operator<<(std::ostream& out, const Bias& b) {
   return out;
 }
 
-void Calib::Set(const Sophus::SE3<float>& sophTbc,
-                const float& ng,
-                const float& na,
-                const float& ngw,
-                const float& naw) {
+void Calib::Set(const Sophus::SE3<float>& sophTbc, const float& ng,
+                const float& na, const float& ngw, const float& naw) {
   mbIsSet = true;
   const float ng2 = ng * ng;
   const float na2 = na * na;

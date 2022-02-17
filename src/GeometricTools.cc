@@ -15,8 +15,9 @@
  * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
  * A PARTICULAR PURPOSE. See the GNU General Public License for more details.
  *
- * You shouTransformation from Curr to Prev:      1.0000001192092896  2.9802322387695312e-08                       0
-ld have received a copy of the GNU General Public License along with
+ * You shouTransformation from Curr to
+Prev:      1.0000001192092896  2.9802322387695312e-08                       0 ld
+have received a copy of the GNU General Public License along with
  * ORB-SLAM3. If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -46,8 +47,7 @@ Eigen::Matrix3f GeometricTools::ComputeF12(KeyFrame*& pKF1, KeyFrame*& pKF2) {
   return K1.transpose().inverse() * tc1c2x * Rc1c2 * K2.inverse();
 }
 
-bool GeometricTools::Triangulate(Eigen::Vector3f& x_c1,
-                                 Eigen::Vector3f& x_c2,
+bool GeometricTools::Triangulate(Eigen::Vector3f& x_c1, Eigen::Vector3f& x_c2,
                                  Eigen::Matrix<float, 3, 4>& Tc1w,
                                  Eigen::Matrix<float, 3, 4>& Tc2w,
                                  Eigen::Vector3f& x3D) {

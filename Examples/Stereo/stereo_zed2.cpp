@@ -35,10 +35,8 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
 int main(int argc, char** argv) {
   if (argc < 5) {
@@ -79,9 +77,7 @@ int main(int argc, char** argv) {
     string pathSeq(argv[(2 * seq) + 3]);
     string pathTimeStamps(argv[(2 * seq) + 4]);
 
-    LoadImages(pathSeq,
-               vstrImageLeft[seq],
-               vstrImageRight[seq],
+    LoadImages(pathSeq, vstrImageLeft[seq], vstrImageRight[seq],
                vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
@@ -204,16 +200,14 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/zed2_times_left.txt";
   string strPathTimesRight = strPathFolder + "/zed2_times_right.txt";
   fTimes.open(strPathTimesLeft.c_str());
   fTimes.good() ? std::cout << "Left timestamp path exist\n"
-              : std::cerr << "Left timestamp path doesn't exist\n";
+                : std::cerr << "Left timestamp path doesn't exist\n";
   vTimeStamps.reserve(5000);
   vstrImageLeft.reserve(5000);
   vstrImageRight.reserve(5000);
@@ -229,7 +223,7 @@ void LoadImages(const string& strPathFolder,
       vTimeStamps.push_back(t);
       string strLeft;
       ss >> strLeft;
-      vstrImageLeft.push_back(strPathFolder+"/"+strLeft);
+      vstrImageLeft.push_back(strPathFolder + "/" + strLeft);
     }
   }
   fTimes.close();
@@ -248,7 +242,7 @@ void LoadImages(const string& strPathFolder,
       vTimeStamps.push_back(t);
       string strRight;
       ss >> strRight;
-      vstrImageRight.push_back(strPathFolder+"/"+strRight);
+      vstrImageRight.push_back(strPathFolder + "/" + strRight);
     }
   }
 }

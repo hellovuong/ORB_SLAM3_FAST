@@ -32,6 +32,8 @@
 #include <opencv2/core/core.hpp>
 
 #include "Converter.h"
+#include "sophus_utilis.hpp"
+
 #include "Thirdparty/g2o/g2o/core/base_binary_edge.h"
 #include "Thirdparty/g2o/g2o/core/base_multi_edge.h"
 #include "Thirdparty/g2o/g2o/core/base_unary_edge.h"
@@ -49,25 +51,6 @@ typedef Eigen::Matrix<double, 9, 1> Vector9d;
 typedef Eigen::Matrix<double, 15, 1> Vector15d;
 typedef Eigen::Matrix<double, 15, 15> Matrix15d;
 typedef Eigen::Matrix<double, 9, 9> Matrix9d;
-
-Eigen::Matrix3d ExpSO3(double x, double y, double z);
-Eigen::Matrix3d ExpSO3(const Eigen::Vector3d& w);
-
-Eigen::Vector3d LogSO3(const Eigen::Matrix3d& R);
-
-Eigen::Matrix3d InverseRightJacobianSO3(const Eigen::Vector3d& v);
-Eigen::Matrix3d RightJacobianSO3(const Eigen::Vector3d& v);
-Eigen::Matrix3d RightJacobianSO3(double x, double y, double z);
-
-Eigen::Matrix3d Skew(const Eigen::Vector3d& w);
-Eigen::Matrix3d InverseRightJacobianSO3(double x, double y, double z);
-
-template <typename T = double>
-Eigen::Matrix<T, 3, 3> NormalizeRotation(const Eigen::Matrix<T, 3, 3>& R) {
-  Eigen::JacobiSVD<Eigen::Matrix<T, 3, 3>> svd(
-      R, Eigen::ComputeFullU | Eigen::ComputeFullV);
-  return svd.matrixU() * svd.matrixV().transpose();
-}
 
 class ImuCamPose {
  public:
@@ -222,7 +205,9 @@ class GDirection {
   GDirection() = default;
   GDirection(Eigen::Matrix3d pRwg) : Rwg(pRwg) {}
 
-  void Update(const double* pu) { Rwg = Rwg * ExpSO3(pu[0], pu[1], 0.0); }
+  void Update(const double* pu) {
+    Rwg = Rwg * Sophus::SO3d::exp(Eigen::Vector3d(pu[0], pu[1], 0.0)).matrix();
+  }
 
   Eigen::Matrix3d Rwg;
 
@@ -748,8 +733,12 @@ class Edge4DoF
         static_cast<const VertexPose4DoF*>(_vertices[0]);
     const VertexPose4DoF* VPj =
         static_cast<const VertexPose4DoF*>(_vertices[1]);
-    _error << LogSO3(VPi->estimate().Rcw[0] *
-                     VPj->estimate().Rcw[0].transpose() * dRij.transpose()),
+    _error << Sophus::SO3d(
+                  Eigen::Quaterniond(VPi->estimate().Rcw[0] *
+                                     VPj->estimate().Rcw[0].transpose() *
+                                     dRij.transpose())
+                      .normalized())
+                  .log(),
         VPi->estimate().Rcw[0] *
                 (-VPj->estimate().Rcw[0].transpose() * VPj->estimate().tcw[0]) +
             VPi->estimate().tcw[0] - dtij;

@@ -34,15 +34,11 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro);
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro);
 
 int main(int argc, char** argv) {
   if (argc < 4) {
@@ -92,8 +88,8 @@ int main(int argc, char** argv) {
 
     string pathImu = pathSeq + "/d455_imu.txt";
 
-    LoadImages(
-        pathSeq, vstrImageLeft[seq], vstrImageRight[seq], vTimestampsCam[seq]);
+    LoadImages(pathSeq, vstrImageLeft[seq], vstrImageRight[seq],
+               vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
     cout << "Loading IMU for sequence " << seq << "...";
@@ -170,14 +166,11 @@ int main(int argc, char** argv) {
                 [seq]
                 [ni])  // while(vTimestampsImu[first_imu]<=vTimestampsCam[ni])
         {
-          vImuMeas.push_back(
-              ORB_SLAM3::IMU::Point(vAcc[seq][first_imu[seq]].x,
-                                    vAcc[seq][first_imu[seq]].y,
-                                    vAcc[seq][first_imu[seq]].z,
-                                    vGyro[seq][first_imu[seq]].x,
-                                    vGyro[seq][first_imu[seq]].y,
-                                    vGyro[seq][first_imu[seq]].z,
-                                    vTimestampsImu[seq][first_imu[seq]]));
+          vImuMeas.push_back(ORB_SLAM3::IMU::Point(
+              vAcc[seq][first_imu[seq]].x, vAcc[seq][first_imu[seq]].y,
+              vAcc[seq][first_imu[seq]].z, vGyro[seq][first_imu[seq]].x,
+              vGyro[seq][first_imu[seq]].y, vGyro[seq][first_imu[seq]].z,
+              vTimestampsImu[seq][first_imu[seq]]));
           first_imu[seq]++;
         }
 
@@ -246,10 +239,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strPathFolder,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strPathFolder, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   string strPathTimesLeft = strPathFolder + "/d455_left.txt";
   string strPathTimesRight = strPathFolder + "/d455_right.txt";
@@ -295,10 +286,8 @@ void LoadImages(const string& strPathFolder,
   }
 }
 
-void LoadIMU(const string& strImuPath,
-             vector<double>& vTimeStamps,
-             vector<cv::Point3f>& vAcc,
-             vector<cv::Point3f>& vGyro) {
+void LoadIMU(const string& strImuPath, vector<double>& vTimeStamps,
+             vector<cv::Point3f>& vAcc, vector<cv::Point3f>& vGyro) {
   ifstream fImu;
   fImu.open(strImuPath.c_str());
   vTimeStamps.reserve(5000);

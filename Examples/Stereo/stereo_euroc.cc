@@ -27,12 +27,9 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathLeft,
-                const string& strPathRight,
-                const string& strPathTimes,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strPathLeft, const string& strPathRight,
+                const string& strPathTimes, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps);
 
 int main(int argc, char** argv) {
   if (argc < 5) {
@@ -78,12 +75,8 @@ int main(int argc, char** argv) {
     string pathCam0 = pathSeq + "/mav0/cam0/data";
     string pathCam1 = pathSeq + "/mav0/cam1/data";
 
-    LoadImages(pathCam0,
-               pathCam1,
-               pathTimeStamps,
-               vstrImageLeft[seq],
-               vstrImageRight[seq],
-               vTimestampsCam[seq]);
+    LoadImages(pathCam0, pathCam1, pathTimeStamps, vstrImageLeft[seq],
+               vstrImageRight[seq], vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
     nImages[seq] = vstrImageLeft[seq].size();
@@ -141,10 +134,7 @@ int main(int argc, char** argv) {
 #endif
 
       // Pass the images to the SLAM system
-      SLAM.TrackStereo(imLeft,
-                       imRight,
-                       tframe,
-                       vector<ORB_SLAM3::IMU::Point>(),
+      SLAM.TrackStereo(imLeft, imRight, tframe, vector<ORB_SLAM3::IMU::Point>(),
                        vstrImageLeft[seq][ni]);
 
 #ifdef COMPILEDWITHC11
@@ -202,12 +192,9 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strPathLeft,
-                const string& strPathRight,
-                const string& strPathTimes,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strPathLeft, const string& strPathRight,
+                const string& strPathTimes, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimeStamps) {
   ifstream fTimes;
   fTimes.open(strPathTimes.c_str());
   vTimeStamps.reserve(5000);

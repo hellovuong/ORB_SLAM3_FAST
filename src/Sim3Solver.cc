@@ -31,8 +31,7 @@
 
 namespace ORB_SLAM3 {
 
-Sim3Solver::Sim3Solver(KeyFrame* pKF1,
-                       KeyFrame* pKF2,
+Sim3Solver::Sim3Solver(KeyFrame* pKF1, KeyFrame* pKF2,
                        const vector<MapPoint*>& vpMatched12,
                        const bool bFixScale,
                        vector<KeyFrame*> vpKeyFrameMatchedMP)
@@ -117,8 +116,7 @@ Sim3Solver::Sim3Solver(KeyFrame* pKF1,
   SetRansacParameters();
 }
 
-void Sim3Solver::SetRansacParameters(double probability,
-                                     int minInliers,
+void Sim3Solver::SetRansacParameters(double probability, int minInliers,
                                      int maxIterations) {
   mRansacProb = probability;
   mRansacMinInliers = minInliers;
@@ -144,10 +142,8 @@ void Sim3Solver::SetRansacParameters(double probability,
   mnIterations = 0;
 }
 
-Eigen::Matrix4f Sim3Solver::iterate(int nIterations,
-                                    bool& bNoMore,
-                                    vector<bool>& vbInliers,
-                                    int& nInliers) {
+Eigen::Matrix4f Sim3Solver::iterate(int nIterations, bool& bNoMore,
+                                    vector<bool>& vbInliers, int& nInliers) {
   bNoMore = false;
   vbInliers = vector<bool>(mN1, false);
   nInliers = 0;
@@ -208,10 +204,8 @@ Eigen::Matrix4f Sim3Solver::iterate(int nIterations,
   return Eigen::Matrix4f::Identity();
 }
 
-Eigen::Matrix4f Sim3Solver::iterate(int nIterations,
-                                    bool& bNoMore,
-                                    vector<bool>& vbInliers,
-                                    int& nInliers,
+Eigen::Matrix4f Sim3Solver::iterate(int nIterations, bool& bNoMore,
+                                    vector<bool>& vbInliers, int& nInliers,
                                     bool& bConverge) {
   bNoMore = false;
   bConverge = false;
@@ -285,8 +279,7 @@ Eigen::Matrix4f Sim3Solver::find(vector<bool>& vbInliers12, int& nInliers) {
   return iterate(mRansacMaxIts, bFlag, vbInliers12, nInliers);
 }
 
-void Sim3Solver::ComputeCentroid(Eigen::Matrix3f& P,
-                                 Eigen::Matrix3f& Pr,
+void Sim3Solver::ComputeCentroid(Eigen::Matrix3f& P, Eigen::Matrix3f& Pr,
                                  Eigen::Vector3f& C) {
   C = P.rowwise().sum();
   C = C / P.cols();
@@ -428,8 +421,7 @@ Eigen::Vector3f Sim3Solver::GetEstimatedTranslation() {
 float Sim3Solver::GetEstimatedScale() { return mBestScale; }
 
 void Sim3Solver::Project(const vector<Eigen::Vector3f>& vP3Dw,
-                         vector<Eigen::Vector2f>& vP2D,
-                         Eigen::Matrix4f Tcw,
+                         vector<Eigen::Vector2f>& vP2D, Eigen::Matrix4f Tcw,
                          GeometricCamera* pCamera) {
   Eigen::Matrix3f Rcw = Tcw.block<3, 3>(0, 0);
   Eigen::Vector3f tcw = Tcw.block<3, 1>(0, 3);

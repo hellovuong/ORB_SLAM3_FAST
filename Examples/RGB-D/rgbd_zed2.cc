@@ -48,9 +48,7 @@ int main(int argc, char** argv) {
   vector<string> vstrImageFilenamesD;
   vector<double> vTimestamps;
   string strAssociationFolder = string(argv[3]);
-  LoadImages(strAssociationFolder,
-             vstrImageFilenamesRGB,
-             vstrImageFilenamesD,
+  LoadImages(strAssociationFolder, vstrImageFilenamesRGB, vstrImageFilenamesD,
              vTimestamps);
 
   // Check consistency in the number of images and depthmaps

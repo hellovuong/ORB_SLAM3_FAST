@@ -69,4 +69,4 @@ inline std::string FormatString() { return std::string(); }
 }  // namespace details
 }  // namespace Sophus
 
-#endif //SOPHUS_FORMATSTRING_HPP
+#endif  // SOPHUS_FORMATSTRING_HPP

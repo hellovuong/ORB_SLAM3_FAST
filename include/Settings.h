@@ -69,12 +69,12 @@ class Settings {
   GeometricCamera* camera1() { return calibration1_; }
   GeometricCamera* camera2() { return calibration2_; }
   cv::Mat camera1DistortionCoef() {
-    return cv::Mat(
-        vPinHoleDistorsion1_.size(), 1, CV_32F, vPinHoleDistorsion1_.data());
+    return cv::Mat(vPinHoleDistorsion1_.size(), 1, CV_32F,
+                   vPinHoleDistorsion1_.data());
   }
   cv::Mat camera2DistortionCoef() {
-    return cv::Mat(
-        vPinHoleDistorsion2_.size(), 1, CV_32F, vPinHoleDistorsion1_.data());
+    return cv::Mat(vPinHoleDistorsion2_.size(), 1, CV_32F,
+                   vPinHoleDistorsion1_.data());
   }
 
   Sophus::SE3f Tlr() { return Tlr_; }
@@ -101,9 +101,9 @@ class Settings {
   float depthMapFactor() const { return depthMapFactor_; }
 
   Sophus::SE3f Tbo() { return Tbo_; }
-  float noiseX() const {return NoiseX_;}
-  float noiseY() const {return NoiseY_;}
-  float noiseRotZ_() const {return NoiseRotZ_;}
+  float noiseX() const { return NoiseX_; }
+  float noiseY() const { return NoiseY_; }
+  float noiseRotZ_() const { return NoiseRotZ_; }
 
   int nFeatures() const { return nFeatures_; }
   int nLevels() const { return nLevels_; }
@@ -135,10 +135,8 @@ class Settings {
 
  private:
   template <typename T>
-  T readParameter(cv::FileStorage& fSettings,
-                  const std::string& name,
-                  bool& found,
-                  const bool required = true) {
+  T readParameter(cv::FileStorage& fSettings, const std::string& name,
+                  bool& found, const bool required = true) {
     cv::FileNode node = fSettings[name];
     if (node.empty()) {
       if (required) {
@@ -216,7 +214,7 @@ class Settings {
   /*
    * WOdometry stuff
    */
-  float NoiseX_, NoiseY_,NoiseRotZ_;
+  float NoiseX_, NoiseY_, NoiseRotZ_;
   Sophus::SE3f Tbo_;
 
   /*

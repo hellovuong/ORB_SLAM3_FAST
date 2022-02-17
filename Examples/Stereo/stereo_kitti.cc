@@ -30,10 +30,8 @@
 
 using namespace std;
 
-void LoadImages(const string& strPathToSequence,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimestamps);
+void LoadImages(const string& strPathToSequence, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimestamps);
 
 int main(int argc, char** argv) {
   if (argc != 4) {
@@ -175,10 +173,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strPathToSequence,
-                vector<string>& vstrImageLeft,
-                vector<string>& vstrImageRight,
-                vector<double>& vTimestamps) {
+void LoadImages(const string& strPathToSequence, vector<string>& vstrImageLeft,
+                vector<string>& vstrImageRight, vector<double>& vTimestamps) {
   ifstream fTimes;
   string strPathTimeFile = strPathToSequence + "/times.txt";
   fTimes.open(strPathTimeFile.c_str());

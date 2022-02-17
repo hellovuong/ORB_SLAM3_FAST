@@ -93,3 +93,4 @@ borrar/*
 */ExecMean.txt
 
 .vscode
+cmake-build-release

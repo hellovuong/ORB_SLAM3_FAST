@@ -21,10 +21,14 @@ void EdgeWOdometry::computeError() {
   const double dr = mpInt->Delta.cast<double>().z();
   const Eigen::Vector2d dp = mpInt->Delta.head(2).cast<double>();
 
-  const double er = e3.transpose() * LogSO3(Rbo.transpose() *
-                                            VP1->estimate().Rwb.transpose() *
-                                            VP2->estimate().Rwb * Rbo) -
-                    dr;
+  const double er =
+      e3.transpose() *
+          Sophus::SO3d(Eigen::Quaterniond(Rbo.transpose() *
+                                          VP1->estimate().Rwb.transpose() *
+                                          VP2->estimate().Rwb * Rbo)
+                           .normalized())
+              .log() -
+      dr;
 
   const Eigen::Vector2d ep =
       lambd * (VP1->estimate().Rwb * Rbo).transpose() *
@@ -51,9 +55,12 @@ void EdgeWOdometry::linearizeOplus() {
 
   const Eigen::Matrix3d tmp = (Rbw1 * Rwb2 * Rbo).transpose();
 
-  const Eigen::Vector3d deltaR = LogSO3(Rob * Rbw1 * VP2->estimate().Rwb * Rbo);
-  const Eigen::Matrix3d invJr = InverseRightJacobianSO3(deltaR);
-
+  const Eigen::Vector3d deltaR =
+      Sophus::SO3d(Eigen::Quaterniond(Rob * Rbw1 * VP2->estimate().Rwb * Rbo)
+                       .normalized())
+          .log();
+  const Eigen::Matrix3d invJr;  // = InverseRightJacobianSO3(deltaR);
+  Sophus::rightJacobianInvSO3(deltaR, invJr);
   _jacobianOplusXi.setZero();
   // Jacobian wrt Pose1
   // rotation
@@ -63,9 +70,10 @@ void EdgeWOdometry::linearizeOplus() {
   //        Skew(Rbw1 * (VP2->estimate().twb + Rwb2 * tbo -
   //                     VP1->estimate().twb));  // TODO: Check this
   _jacobianOplusXi.block<2, 3>(1, 0) =
-      lambd * (Rwb1 * Rbo).transpose() * (Rwb1 * Skew(tbo)) +
+      lambd * (Rwb1 * Rbo).transpose() * (Rwb1 * Sophus::SO3d::hat(tbo)) +
       lambd * Rbo.transpose() *
-          Skew(Rwb1.transpose() * (Rwb2 * tbo + twb2 - Rwb1 * tbo - twb1));
+          Sophus::SO3d::hat(Rwb1.transpose() *
+                            (Rwb2 * tbo + twb2 - Rwb1 * tbo - twb1));
   // translation
   _jacobianOplusXi.block<1, 3>(0, 3) = Eigen::Vector3d::Zero().transpose();
   _jacobianOplusXi.block<2, 3>(1, 3) = -lambd * (Rwb1 * Rbo).transpose();
@@ -78,7 +86,8 @@ void EdgeWOdometry::linearizeOplus() {
   // Jacobian wrt Pose2
   // rotation
   _jacobianOplusXj.block<1, 3>(0, 0) = e3.transpose() * invJr * Rob;
-  _jacobianOplusXj.block<2, 3>(1, 0) = -lambd * Rob * Rbw1 * Rwb2 * Skew(tbo);
+  _jacobianOplusXj.block<2, 3>(1, 0) =
+      -lambd * Rob * Rbw1 * Rwb2 * Sophus::SO3d::hat(tbo);
   // translation
   _jacobianOplusXj.block<1, 3>(0, 3) = Eigen::Vector3d::Zero().transpose();
   _jacobianOplusXj.block<2, 3>(1, 3) = lambd * Rob * Rbw1 * Rwb2;

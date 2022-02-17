@@ -90,6 +90,8 @@ Frame::Frame(const Frame& frame)
       mnCloseMPs(frame.mnCloseMPs),
       mpImuPreintegrated(frame.mpImuPreintegrated),
       mpImuPreintegratedFrame(frame.mpImuPreintegratedFrame),
+      mpOdomPreintegrated(frame.mpOdomPreintegrated),
+      mpOdomPreintegratedFrame(frame.mpOdomPreintegratedFrame),
       mImuBias(frame.mImuBias),
       mnId(frame.mnId),
       mpReferenceKF(frame.mpReferenceKF),
@@ -512,9 +514,9 @@ void Frame::AssignFeaturesToGrid() {
     }
 
   for (int i = 0; i < N; i++) {
-    const cv::KeyPoint& kp = (Nleft == -1) ? mvKeysUn[i]
-                             : (i < Nleft) ? mvKeys[i]
-                                           : mvKeysRight[i - Nleft];
+    const cv::KeyPoint& kp =
+        (Nleft == -1) ? mvKeysUn[i]
+                      : (i < Nleft) ? mvKeys[i] : mvKeysRight[i - Nleft];
 
     int nGridPosX, nGridPosY;
     if (PosInGrid(kp, nGridPosX, nGridPosY)) {
@@ -526,17 +528,15 @@ void Frame::AssignFeaturesToGrid() {
   }
 }
 
-void Frame::ExtractORB(int flag,
-                       const cv::Mat& im,
-                       const int x0,
+void Frame::ExtractORB(int flag, const cv::Mat& im, const int x0,
                        const int x1) {
   vector<int> vLapping = {x0, x1};
   if (flag == 0)
     monoLeft =
         (*mpORBextractorLeft)(im, cv::Mat(), mvKeys, mDescriptors, vLapping);
   else
-    monoRight = (*mpORBextractorRight)(
-        im, cv::Mat(), mvKeysRight, mDescriptorsRight, vLapping);
+    monoRight = (*mpORBextractorRight)(im, cv::Mat(), mvKeysRight,
+                                       mDescriptorsRight, vLapping);
 }
 
 bool Frame::isSet() const { return mbIsSet; }
@@ -785,9 +785,10 @@ vector<size_t> Frame::GetFeaturesInArea(const float& x, const float& y,
       if (vCell.empty()) continue;
 
       for (size_t j = 0, jend = vCell.size(); j < jend; j++) {
-        const cv::KeyPoint& kpUn = (Nleft == -1) ? mvKeysUn[vCell[j]]
-                                   : (!bRight)   ? mvKeys[vCell[j]]
-                                                 : mvKeysRight[vCell[j]];
+        const cv::KeyPoint& kpUn =
+            (Nleft == -1)
+                ? mvKeysUn[vCell[j]]
+                : (!bRight) ? mvKeys[vCell[j]] : mvKeysRight[vCell[j]];
         if (bCheckLevels) {
           if (kpUn.octave < minLevel) continue;
           if (maxLevel >= 0)

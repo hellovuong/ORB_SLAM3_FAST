@@ -424,7 +424,7 @@ class SE2 : public SE2Base<SE2<Scalar_, Options>> {
   /// Constructor from complex number and translation vector
   ///
   /// Precondition: ``complex`` must not be close to zero.
-  SOPHUS_FUNC SE2(Vector2<Scalar> const& complex, Point const& translation)
+  SOPHUS_FUNC SE2(Eigen::Rotation2D<float> complex, Point const& translation)
       : so2_(complex), translation_(translation) {}
 
   /// Constructor from 3x3 matrix

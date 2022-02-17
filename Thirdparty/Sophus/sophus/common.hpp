@@ -14,7 +14,7 @@
 
 #if !defined(SOPHUS_DISABLE_ENSURES)
 #include "formatstring.hpp"
-#endif //!defined(SOPHUS_DISABLE_ENSURES)
+#endif  //! defined(SOPHUS_DISABLE_ENSURES)
 
 // following boost's assert.hpp
 #undef SOPHUS_ENSURE
@@ -37,8 +37,8 @@
 #define EIGEN_DEVICE_FUNC
 #endif
 
-// NVCC on windows has issues with defaulting the Map specialization constructors, so
-// special case that specific platform case.
+// NVCC on windows has issues with defaulting the Map specialization
+// constructors, so special case that specific platform case.
 #if defined(_MSC_VER) && defined(__CUDACC__)
 #define SOPHUS_WINDOW_NVCC_FALLBACK
 #endif

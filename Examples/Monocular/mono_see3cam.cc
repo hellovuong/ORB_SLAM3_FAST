@@ -36,10 +36,8 @@
 
 using namespace std;
 
-void LoadImages(const string& strImagePath,
-                const string& strPathTimes,
-                vector<string>& vstrImages,
-                vector<double>& vTimeStamps);
+void LoadImages(const string& strImagePath, const string& strPathTimes,
+                vector<string>& vstrImages, vector<double>& vTimeStamps);
 
 double ttrack_tot = 0;
 int main(int argc, char** argv) {
@@ -77,10 +75,8 @@ int main(int argc, char** argv) {
   int tot_images = 0;
   for (seq = 0; seq < num_seq; seq++) {
     cout << "Loading images for sequence " << seq << "...";
-    LoadImages(string(argv[(2 * seq) + 3]),
-               string(argv[(2 * seq) + 4]),
-               vstrImageFilenames[seq],
-               vTimestampsCam[seq]);
+    LoadImages(string(argv[(2 * seq) + 3]), string(argv[(2 * seq) + 4]),
+               vstrImageFilenames[seq], vTimestampsCam[seq]);
     cout << "LOADED!" << endl;
 
     nImages[seq] = vstrImageFilenames[seq].size();
@@ -100,8 +96,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(
-      argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true, 0, file_name);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true,
+                         0, file_name);
   float imageScale = SLAM.GetImageScale();
 
   double t_resize = 0.f;
@@ -239,10 +235,8 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-void LoadImages(const string& strImagePath,
-                const string& strPathTimes,
-                vector<string>& vstrImages,
-                vector<double>& vTimeStamps) {
+void LoadImages(const string& strImagePath, const string& strPathTimes,
+                vector<string>& vstrImages, vector<double>& vTimeStamps) {
   ifstream fTimes;
   fTimes.open(strPathTimes.c_str());
   vTimeStamps.reserve(5000);

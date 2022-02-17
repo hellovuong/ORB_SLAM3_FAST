@@ -44,12 +44,8 @@ const float GRAVITY_VALUE = 9.81;
 // IMU measurement (gyro, accelerometer and timestamp)
 class Point {
  public:
-  Point(const float& acc_x,
-        const float& acc_y,
-        const float& acc_z,
-        const float& ang_vel_x,
-        const float& ang_vel_y,
-        const float& ang_vel_z,
+  Point(const float& acc_x, const float& acc_y, const float& acc_z,
+        const float& ang_vel_x, const float& ang_vel_y, const float& ang_vel_z,
         const double& timestamp)
       : a(acc_x, acc_y, acc_z),
         w(ang_vel_x, ang_vel_y, ang_vel_z),
@@ -80,11 +76,8 @@ class Bias {
 
  public:
   Bias() : bax(0), bay(0), baz(0), bwx(0), bwy(0), bwz(0) {}
-  Bias(const float& b_acc_x,
-       const float& b_acc_y,
-       const float& b_acc_z,
-       const float& b_ang_vel_x,
-       const float& b_ang_vel_y,
+  Bias(const float& b_acc_x, const float& b_acc_y, const float& b_acc_z,
+       const float& b_ang_vel_x, const float& b_ang_vel_y,
        const float& b_ang_vel_z)
       : bax(b_acc_x),
         bay(b_acc_y),
@@ -118,11 +111,8 @@ class Calib {
   }
 
  public:
-  Calib(const Sophus::SE3<float>& Tbc,
-        const float& ng,
-        const float& na,
-        const float& ngw,
-        const float& naw) {
+  Calib(const Sophus::SE3<float>& Tbc, const float& ng, const float& na,
+        const float& ngw, const float& naw) {
     Set(Tbc, ng, na, ngw, naw);
   }
 
@@ -131,11 +121,8 @@ class Calib {
 
   // void Set(const cv::Mat &cvTbc, const float &ng, const float &na, const
   // float &ngw, const float &naw);
-  void Set(const Sophus::SE3<float>& sophTbc,
-           const float& ng,
-           const float& na,
-           const float& ngw,
-           const float& naw);
+  void Set(const Sophus::SE3<float>& sophTbc, const float& ng, const float& na,
+           const float& ngw, const float& naw);
 
  public:
   // Sophus/Eigen implementation
@@ -149,8 +136,7 @@ class Calib {
 class IntegratedRotation {
  public:
   IntegratedRotation() {}
-  IntegratedRotation(const Eigen::Vector3f& angVel,
-                     const Bias& imuBias,
+  IntegratedRotation(const Eigen::Vector3f& angVel, const Bias& imuBias,
                      const float& time);
 
  public:
@@ -198,8 +184,7 @@ class Preintegrated {
   void CopyFrom(Preintegrated* pImuPre);
   void Initialize(const Bias& b_);
   void IntegrateNewMeasurement(const Eigen::Vector3f& acceleration,
-                               const Eigen::Vector3f& angVel,
-                               const float& dt);
+                               const Eigen::Vector3f& angVel, const float& dt);
   void Reintegrate();
   void MergePrevious(Preintegrated* pPrev);
   void SetNewBias(const Bias& bu_);
@@ -224,7 +209,7 @@ class Preintegrated {
 
   void printMeasurements() const {
     std::cout << "pint meas:\n";
-    for (const auto & mvMeasurement : mvMeasurements) {
+    for (const auto& mvMeasurement : mvMeasurements) {
       std::cout << "meas " << mvMeasurement.t << std::endl;
     }
     std::cout << "end pint meas:\n";
@@ -260,8 +245,7 @@ class Preintegrated {
 
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     integrable() {}
-    integrable(const Eigen::Vector3f& a_,
-               const Eigen::Vector3f& w_,
+    integrable(const Eigen::Vector3f& a_, const Eigen::Vector3f& w_,
                const float& t_)
         : a(a_), w(w_), t(t_) {}
     Eigen::Vector3f a, w;
@@ -274,13 +258,11 @@ class Preintegrated {
 };
 
 // Lie Algebra Functions
-Eigen::Matrix3f RightJacobianSO3(const float& x,
-                                 const float& y,
+Eigen::Matrix3f RightJacobianSO3(const float& x, const float& y,
                                  const float& z);
 Eigen::Matrix3f RightJacobianSO3(const Eigen::Vector3f& v);
 
-Eigen::Matrix3f InverseRightJacobianSO3(const float& x,
-                                        const float& y,
+Eigen::Matrix3f InverseRightJacobianSO3(const float& x, const float& y,
                                         const float& z);
 Eigen::Matrix3f InverseRightJacobianSO3(const Eigen::Vector3f& v);
 

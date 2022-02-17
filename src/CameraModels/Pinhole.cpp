@@ -62,14 +62,12 @@ float Pinhole::uncertainty2(const Eigen::Matrix<double, 2, 1>& p2D) {
 
 Eigen::Vector3f Pinhole::unprojectEig(const cv::Point2f& p2D) {
   return Eigen::Vector3f((p2D.x - mvParameters[2]) / mvParameters[0],
-                         (p2D.y - mvParameters[3]) / mvParameters[1],
-                         1.f);
+                         (p2D.y - mvParameters[3]) / mvParameters[1], 1.f);
 }
 
 cv::Point3f Pinhole::unproject(const cv::Point2f& p2D) {
   return cv::Point3f((p2D.x - mvParameters[2]) / mvParameters[0],
-                     (p2D.y - mvParameters[3]) / mvParameters[1],
-                     1.f);
+                     (p2D.y - mvParameters[3]) / mvParameters[1], 1.f);
 }
 
 Eigen::Matrix<double, 2, 3> Pinhole::projectJac(const Eigen::Vector3d& v3D) {
@@ -95,20 +93,13 @@ bool Pinhole::ReconstructWithTwoViews(const std::vector<cv::KeyPoint>& vKeys1,
     tvr = new TwoViewReconstruction(K);
   }
 
-  return tvr->Reconstruct(
-      vKeys1, vKeys2, vMatches12, T21, vP3D, vbTriangulated);
+  return tvr->Reconstruct(vKeys1, vKeys2, vMatches12, T21, vP3D,
+                          vbTriangulated);
 }
 
 cv::Mat Pinhole::toK() {
-  cv::Mat K = (cv::Mat_<float>(3, 3) << mvParameters[0],
-               0.f,
-               mvParameters[2],
-               0.f,
-               mvParameters[1],
-               mvParameters[3],
-               0.f,
-               0.f,
-               1.f);
+  cv::Mat K = (cv::Mat_<float>(3, 3) << mvParameters[0], 0.f, mvParameters[2],
+               0.f, mvParameters[1], mvParameters[3], 0.f, 0.f, 1.f);
   return K;
 }
 
@@ -124,8 +115,7 @@ bool Pinhole::epipolarConstrain(GeometricCamera* pCamera2,
                                 const cv::KeyPoint& kp2,
                                 const Eigen::Matrix3f& R12,
                                 const Eigen::Vector3f& t12,
-                                const float sigmaLevel,
-                                const float unc) {
+                                const float sigmaLevel, const float unc) {
   // Compute Fundamental Matrix
   Eigen::Matrix3f t12x = Sophus::SO3f::hat(t12);
   Eigen::Matrix3f K1 = this->toK_();

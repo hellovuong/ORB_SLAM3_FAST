@@ -32,11 +32,8 @@
 
 namespace ORB_SLAM3 {
 
-LocalMapping::LocalMapping(System* pSys,
-                           Atlas* pAtlas,
-                           const float bMonocular,
-                           bool bInertial,
-                           const string& _strSeqName)
+LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
+                           bool bInertial, const string& _strSeqName)
     : mpSystem(pSys),
       mbMonocular(bMonocular),
       mbInertial(bInertial),
@@ -1167,7 +1164,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   Eigen::Quaterniond qRwg(mRwg);
   qRwg.normalize();
   Sophus::SO3d spRwg(qRwg.matrix());
-  std::cout << "Rwg before opt: " << std::endl << spRwg.log() << std::endl;
+  std::cout << "Rwg before opt: " << std::endl
+            << spRwg.log().transpose() << std::endl;
   std::cout << "Scale before opt: " << mScale << std::endl;
 
   mScale = 1.0;
@@ -1189,7 +1187,8 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
   Eigen::Quaterniond qRwg_after(mRwg);
   qRwg_after.normalize();
   Sophus::SO3d spRwg_after(qRwg.matrix());
-  std::cout << "Rwg after opt: " << std::endl << spRwg_after.log() << std::endl;
+  std::cout << "Rwg after opt: " << std::endl
+            << spRwg_after.log().transpose() << std::endl;
   std::cout << "Scale after opt: " << mScale << std::endl;
   // Before this line we are not changing the map
   {

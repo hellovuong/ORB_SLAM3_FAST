@@ -44,7 +44,7 @@ MESSAGE("OPENCV VERSION:")
 MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED)
+find_package(Pangolin REQUIRED PATHS "/home/vuong/Code/local_lib")
 find_package(realsense2)
 
 find_package(TBB REQUIRED)
@@ -124,7 +124,10 @@ add_library(${PROJECT_NAME} SHARED
         include/TwoViewReconstruction.h
         include/SerializationUtils.h
         include/Config.h
-        include/Settings.h src/OdomTypes.cpp include/OdomTypes.h src/OdomFactor.cpp include/OdomFactor.h)
+        include/Settings.h
+        src/OdomTypes.cpp include/OdomTypes.h
+        src/OdomFactor.cpp include/OdomFactor.h
+        include/sophus_utilis.hpp)
 
 add_subdirectory(Thirdparty/g2o)
 
@@ -173,6 +176,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertia
 add_executable(stereo_inertial_w_zed2
         Examples/Stereo-Inertial-W/stereo_inertial_w_zed2.cpp)
 target_link_libraries(stereo_inertial_w_zed2 ${PROJECT_NAME})
+
+add_executable(stereo_inertial_w_openloris
+        Examples/Stereo-Inertial-W/stereo_inertial_w_openloris.cpp)
+target_link_libraries(stereo_inertial_w_openloris ${PROJECT_NAME})
 
 # Build examples
 if (BUILD_EXAMPLES)

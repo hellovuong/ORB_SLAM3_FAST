@@ -88,8 +88,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(
-      argv[1], argv[2], ORB_SLAM3::System::STEREO, true, 0, file_name);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::STEREO, true, 0,
+                         file_name);
   float imageScale = SLAM.GetImageScale();
 
   cv::Mat imLeft, imRight;
@@ -124,14 +124,10 @@ int main(int argc, char** argv) {
             frame_set.first_or_default(RS2_STREAM_FISHEYE)) {
       rs2::video_frame frame_left = frame_set.get_fisheye_frame(1);
       rs2::video_frame frame_right = frame_set.get_fisheye_frame(2);
-      imLeft = cv::Mat(cv::Size(width_left, height_left),
-                       CV_8UC1,
-                       (void*)(frame_left.get_data()),
-                       cv::Mat::AUTO_STEP);
-      imRight = cv::Mat(cv::Size(width_right, height_right),
-                        CV_8UC1,
-                        (void*)(frame_right.get_data()),
-                        cv::Mat::AUTO_STEP);
+      imLeft = cv::Mat(cv::Size(width_left, height_left), CV_8UC1,
+                       (void*)(frame_left.get_data()), cv::Mat::AUTO_STEP);
+      imRight = cv::Mat(cv::Size(width_right, height_right), CV_8UC1,
+                        (void*)(frame_right.get_data()), cv::Mat::AUTO_STEP);
 
       if (imageScale != 1.f) {
 #ifdef REGISTER_TIMES

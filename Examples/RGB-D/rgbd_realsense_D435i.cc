@@ -52,8 +52,7 @@ bool profile_changed(const std::vector<rs2::stream_profile>& current,
 void interpolateData(const std::vector<double>& vBase_times,
                      std::vector<rs2_vector>& vInterp_data,
                      std::vector<double>& vInterp_times,
-                     const rs2_vector& prev_data,
-                     const double& prev_time);
+                     const rs2_vector& prev_data, const double& prev_time);
 
 rs2_vector interpolateMeasure(const double target_time,
                               const rs2_vector current_data,
@@ -305,8 +304,8 @@ int main(int argc, char** argv) {
 
   // Create SLAM system. It initializes all system threads and gets ready to
   // process frames.
-  ORB_SLAM3::System SLAM(
-      argv[1], argv[2], ORB_SLAM3::System::RGBD, true, 0, file_name);
+  ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::RGBD, true, 0,
+                         file_name);
   float imageScale = SLAM.GetImageScale();
 
   double timestamp;
@@ -348,14 +347,10 @@ int main(int argc, char** argv) {
     rs2::video_frame color_frame = processed.first(align_to);
     rs2::depth_frame depth_frame = processed.get_depth_frame();
 
-    im = cv::Mat(cv::Size(width_img, height_img),
-                 CV_8UC3,
-                 (void*)(color_frame.get_data()),
-                 cv::Mat::AUTO_STEP);
-    depth = cv::Mat(cv::Size(width_img, height_img),
-                    CV_16U,
-                    (void*)(depth_frame.get_data()),
-                    cv::Mat::AUTO_STEP);
+    im = cv::Mat(cv::Size(width_img, height_img), CV_8UC3,
+                 (void*)(color_frame.get_data()), cv::Mat::AUTO_STEP);
+    depth = cv::Mat(cv::Size(width_img, height_img), CV_16U,
+                    (void*)(depth_frame.get_data()), cv::Mat::AUTO_STEP);
 
     /*cv::Mat depthCV_8U;
     depthCV.convertTo(depthCV_8U,CV_8U,0.01);
@@ -459,8 +454,7 @@ bool profile_changed(const std::vector<rs2::stream_profile>& current,
                      const std::vector<rs2::stream_profile>& prev) {
   for (auto&& sp : prev) {
     // If previous profile is in current (maybe just added another)
-    auto itr = std::find_if(std::begin(current),
-                            std::end(current),
+    auto itr = std::find_if(std::begin(current), std::end(current),
                             [&sp](const rs2::stream_profile& current_sp) {
                               return sp.unique_id() == current_sp.unique_id();
                             });

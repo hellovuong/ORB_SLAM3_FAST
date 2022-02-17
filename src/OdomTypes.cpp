@@ -20,9 +20,10 @@ Preintegrated::Preintegrated(Eigen::Vector3d& vNoises, Sophus::SE3f& Tbo_)
 }
 void Preintegrated::IntegratedNewMeasurement(Sophus::SE2f& PrevMeas,
                                              Sophus::SE2f& CurrMeas) {
-  mvMeasurements.push_back(PrevMeas);
+  // mvMeasurements.push_back(PrevMeas);
+  // PrevMeas.so2().normalize();
+  // CurrMeas.so2().normalize();
   Sophus::SE2f delta = PrevMeas.inverse() * CurrMeas;
-
   Eigen::Matrix2f Phi_ik = Meas.rotationMatrix();
   Meas = Meas * delta;
 

@@ -168,11 +168,11 @@ void LoopClosing::Run() {
                    mpTracker->mSensor == System::IMU_RGBD) &&
                   mpCurrentKF->GetMap()->GetIniertialBA1()) {
                 Eigen::Vector3d phi =
-                    LogSO3(mSold_new.rotation().toRotationMatrix());
+                    Sophus::SO3d(mSold_new.rotation().normalized()).log();
                 phi(0) = 0;
                 phi(1) = 0;
-                mSold_new =
-                    g2o::Sim3(ExpSO3(phi), mSold_new.translation(), 1.0);
+                mSold_new = g2o::Sim3(Sophus::SO3d::exp(phi).unit_quaternion(),
+                                      mSold_new.translation(), 1.0);
               }
             }
 
@@ -253,7 +253,7 @@ void LoopClosing::Run() {
             g2o::Sim3 g2oSww_new = g2oTwc * mg2oLoopScw;
 
             Eigen::Vector3d phi =
-                LogSO3(g2oSww_new.rotation().toRotationMatrix());
+                Sophus::SO3d(g2oSww_new.rotation().normalized()).log();
             cout << "phi = " << phi.transpose() << endl;
             if (fabs(phi(0)) < 0.008f && fabs(phi(1)) < 0.008f &&
                 fabs(phi(2)) < 0.349f) {
@@ -266,7 +266,8 @@ void LoopClosing::Run() {
                   phi(0) = 0;
                   phi(1) = 0;
                   g2oSww_new =
-                      g2o::Sim3(ExpSO3(phi), g2oSww_new.translation(), 1.0);
+                      g2o::Sim3(Sophus::SO3d::exp(phi).unit_quaternion(),
+                                g2oSww_new.translation(), 1.0);
                   mg2oLoopScw = g2oTwc.inverse() * g2oSww_new;
                 }
               }
@@ -1181,7 +1182,7 @@ void LoopClosing::CorrectLoop() {
   map<KeyFrame*, set<KeyFrame*>> LoopConnections;
 
   for (auto vit = mvpCurrentConnectedKFs.begin(),
-                                   vend = mvpCurrentConnectedKFs.end();
+            vend = mvpCurrentConnectedKFs.end();
        vit != vend; vit++) {
     KeyFrame* pKFi = *vit;
     vector<KeyFrame*> vpPreviousNeighbors = pKFi->GetVectorCovisibleKeyFrames();
@@ -1189,10 +1190,10 @@ void LoopClosing::CorrectLoop() {
     // Update connections. Detect new links.
     pKFi->UpdateConnections();
     LoopConnections[pKFi] = pKFi->GetConnectedKeyFrames();
-    for (auto & vpPreviousNeighbor : vpPreviousNeighbors) {
+    for (auto& vpPreviousNeighbor : vpPreviousNeighbors) {
       LoopConnections[pKFi].erase(vpPreviousNeighbor);
     }
-    for (auto & mvpCurrentConnectedKF : mvpCurrentConnectedKFs) {
+    for (auto& mvpCurrentConnectedKF : mvpCurrentConnectedKFs) {
       LoopConnections[pKFi].erase(mvpCurrentConnectedKF);
     }
   }
@@ -1365,7 +1366,7 @@ void LoopClosing::MergeLocal() {
   int nNumTries = 0;
   while (spLocalWindowKFs.size() < numTemporalKFs && nNumTries < nMaxTries) {
     vector<KeyFrame*> vpNewCovKFs;
-//    vpNewCovKFs.empty();
+    //    vpNewCovKFs.empty();
     for (KeyFrame* pKFi : spLocalWindowKFs) {
       vector<KeyFrame*> vpKFiCov =
           pKFi->GetBestCovisibilityKeyFrames(numTemporalKFs / 2);

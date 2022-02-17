@@ -32,26 +32,20 @@ namespace ORB_SLAM3 {
 class Sim3Solver {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Sim3Solver(KeyFrame* pKF1,
-             KeyFrame* pKF2,
+  Sim3Solver(KeyFrame* pKF1, KeyFrame* pKF2,
              const std::vector<MapPoint*>& vpMatched12,
              const bool bFixScale = true,
              const vector<KeyFrame*> vpKeyFrameMatchedMP = vector<KeyFrame*>());
 
-  void SetRansacParameters(double probability = 0.99,
-                           int minInliers = 6,
+  void SetRansacParameters(double probability = 0.99, int minInliers = 6,
                            int maxIterations = 300);
 
   Eigen::Matrix4f find(std::vector<bool>& vbInliers12, int& nInliers);
 
-  Eigen::Matrix4f iterate(int nIterations,
-                          bool& bNoMore,
-                          std::vector<bool>& vbInliers,
-                          int& nInliers);
-  Eigen::Matrix4f iterate(int nIterations,
-                          bool& bNoMore,
-                          vector<bool>& vbInliers,
-                          int& nInliers,
+  Eigen::Matrix4f iterate(int nIterations, bool& bNoMore,
+                          std::vector<bool>& vbInliers, int& nInliers);
+  Eigen::Matrix4f iterate(int nIterations, bool& bNoMore,
+                          vector<bool>& vbInliers, int& nInliers,
                           bool& bConverge);
 
   Eigen::Matrix4f GetEstimatedTransformation();
@@ -60,8 +54,7 @@ class Sim3Solver {
   float GetEstimatedScale();
 
  protected:
-  void ComputeCentroid(Eigen::Matrix3f& P,
-                       Eigen::Matrix3f& Pr,
+  void ComputeCentroid(Eigen::Matrix3f& P, Eigen::Matrix3f& Pr,
                        Eigen::Vector3f& C);
 
   void ComputeSim3(Eigen::Matrix3f& P1, Eigen::Matrix3f& P2);
@@ -69,8 +62,7 @@ class Sim3Solver {
   void CheckInliers();
 
   void Project(const std::vector<Eigen::Vector3f>& vP3Dw,
-               std::vector<Eigen::Vector2f>& vP2D,
-               Eigen::Matrix4f Tcw,
+               std::vector<Eigen::Vector2f>& vP2D, Eigen::Matrix4f Tcw,
                GeometricCamera* pCamera);
   void FromCameraToImage(const std::vector<Eigen::Vector3f>& vP3Dc,
                          std::vector<Eigen::Vector2f>& vP2D,

@@ -36,8 +36,7 @@ Atlas::Atlas(int initKFid) : mnLastInitKFidMap(initKFid), mHasViewer(false) {
 }
 
 Atlas::~Atlas() {
-  for (auto it = mspMaps.begin(), end = mspMaps.end();
-       it != end;) {
+  for (auto it = mspMaps.begin(), end = mspMaps.end(); it != end;) {
     Map* pMi = *it;
 
     if (pMi) {

@@ -83,11 +83,8 @@ MapPoint::MapPoint(const Eigen::Vector3f& Pos, KeyFrame* pRefKF, Map* pMap)
   mnId = nNextId++;
 }
 
-MapPoint::MapPoint(const double invDepth,
-                   cv::Point2f uv_init,
-                   KeyFrame* pRefKF,
-                   KeyFrame* pHostKF,
-                   Map* pMap)
+MapPoint::MapPoint(const double invDepth, cv::Point2f uv_init, KeyFrame* pRefKF,
+                   KeyFrame* pHostKF, Map* pMap)
     : mnFirstKFid(pRefKF->mnId),
       mnFirstFrame(pRefKF->mnFrameId),
       nObs(0),
@@ -122,9 +119,7 @@ MapPoint::MapPoint(const double invDepth,
   mnId = nNextId++;
 }
 
-MapPoint::MapPoint(const Eigen::Vector3f& Pos,
-                   Map* pMap,
-                   Frame* pFrame,
+MapPoint::MapPoint(const Eigen::Vector3f& Pos, Map* pMap, Frame* pFrame,
                    const int& idxF)
     : mnFirstKFid(-1),
       mnFirstFrame(pFrame->mnId),
@@ -161,9 +156,11 @@ MapPoint::MapPoint(const Eigen::Vector3f& Pos,
 
   Eigen::Vector3f PC = mWorldPos - Ow;
   const float dist = PC.norm();
-  const int level = (pFrame->Nleft == -1)    ? pFrame->mvKeysUn[idxF].octave
-                    : (idxF < pFrame->Nleft) ? pFrame->mvKeys[idxF].octave
-                                             : pFrame->mvKeysRight[idxF].octave;
+  const int level = (pFrame->Nleft == -1)
+                        ? pFrame->mvKeysUn[idxF].octave
+                        : (idxF < pFrame->Nleft)
+                              ? pFrame->mvKeys[idxF].octave
+                              : pFrame->mvKeysRight[idxF].octave;
   const float levelScaleFactor = pFrame->mvScaleFactors[level];
   const int nLevels = pFrame->mnScaleLevels;
 
@@ -274,8 +271,7 @@ void MapPoint::SetBadFlag() {
   }
   for (map<KeyFrame*, tuple<int, int>>::iterator mit = obs.begin(),
                                                  mend = obs.end();
-       mit != mend;
-       mit++) {
+       mit != mend; mit++) {
     KeyFrame* pKF = mit->first;
     int leftIndex = get<0>(mit->second), rightIndex = get<1>(mit->second);
     if (leftIndex != -1) {
@@ -313,8 +309,7 @@ void MapPoint::Replace(MapPoint* pMP) {
 
   for (map<KeyFrame*, tuple<int, int>>::iterator mit = obs.begin(),
                                                  mend = obs.end();
-       mit != mend;
-       mit++) {
+       mit != mend; mit++) {
     // Replace measurement in keyframe
     KeyFrame* pKF = mit->first;
 
@@ -387,8 +382,7 @@ void MapPoint::ComputeDistinctiveDescriptors() {
 
   for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
                                                  mend = observations.end();
-       mit != mend;
-       mit++) {
+       mit != mend; mit++) {
     KeyFrame* pKF = mit->first;
 
     if (!pKF->isBad()) {
@@ -476,8 +470,7 @@ void MapPoint::UpdateNormalAndDepth() {
   int n = 0;
   for (map<KeyFrame*, tuple<int, int>>::iterator mit = observations.begin(),
                                                  mend = observations.end();
-       mit != mend;
-       mit++) {
+       mit != mend; mit++) {
     KeyFrame* pKF = mit->first;
 
     tuple<int, int> indexes = mit->second;
@@ -574,8 +567,7 @@ void MapPoint::PrintObservations() {
   cout << "MP_OBS: MP " << mnId << endl;
   for (map<KeyFrame*, tuple<int, int>>::iterator mit = mObservations.begin(),
                                                  mend = mObservations.end();
-       mit != mend;
-       mit++) {
+       mit != mend; mit++) {
     KeyFrame* pKFi = mit->first;
     tuple<int, int> indexes = mit->second;
     int leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
@@ -605,8 +597,7 @@ void MapPoint::PreSave(set<KeyFrame*>& spKF, set<MapPoint*>& spMP) {
   for (std::map<KeyFrame*, std::tuple<int, int>>::const_iterator
            it = mObservations.begin(),
            end = mObservations.end();
-       it != end;
-       ++it) {
+       it != end; ++it) {
     KeyFrame* pKFi = it->first;
     if (spKF.find(pKFi) != spKF.end()) {
       mBackupObservationsId1[it->first->mnId] = get<0>(it->second);
@@ -641,8 +632,7 @@ void MapPoint::PostLoad(map<long unsigned int, KeyFrame*>& mpKFid,
   for (map<long unsigned int, int>::const_iterator
            it = mBackupObservationsId1.begin(),
            end = mBackupObservationsId1.end();
-       it != end;
-       ++it) {
+       it != end; ++it) {
     KeyFrame* pKFi = mpKFid[it->first];
     map<long unsigned int, int>::const_iterator it2 =
         mBackupObservationsId2.find(it->first);

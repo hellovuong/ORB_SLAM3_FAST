@@ -37,8 +37,7 @@ class GeometricTools {
   static Eigen::Matrix3f ComputeF12(KeyFrame*& pKF1, KeyFrame*& pKF2);
 
   // Triangulate point with KF1 and KF2
-  static bool Triangulate(Eigen::Vector3f& x_c1,
-                          Eigen::Vector3f& x_c2,
+  static bool Triangulate(Eigen::Vector3f& x_c1, Eigen::Vector3f& x_c2,
                           Eigen::Matrix<float, 3, 4>& Tc1w,
                           Eigen::Matrix<float, 3, 4>& Tc2w,
                           Eigen::Vector3f& x3D);
