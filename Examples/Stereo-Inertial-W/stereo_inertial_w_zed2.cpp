@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 
   int tot_images = 0;
 
-  for (int i = 0; i < num_seq; ++i) {
+  for (seq = 0; seq < num_seq; ++seq) {
     cout << "Loading images for sequence " << seq << "...";
 
     string pathSeq(argv[(2 * seq) + 3]);
