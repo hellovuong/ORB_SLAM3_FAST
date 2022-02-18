@@ -179,7 +179,6 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
   if (bDrawKF) {
     for (auto pKF : vpKFs) {
       Eigen::Matrix4f Twc = pKF->GetPoseInverse().matrix();
-      unsigned int index_color = pKF->mnOriginMapId;
 
       glPushMatrix();
 
@@ -246,11 +245,9 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
       const vector<KeyFrame*> vCovKFs = vpKF->GetCovisiblesByWeight(100);
       Eigen::Vector3f Ow = vpKF->GetCameraCenter();
       if (!vCovKFs.empty()) {
-        for (vector<KeyFrame*>::const_iterator vit = vCovKFs.begin(),
-                                               vend = vCovKFs.end();
-             vit != vend; vit++) {
-          if ((*vit)->mnId < vpKF->mnId) continue;
-          Eigen::Vector3f Ow2 = (*vit)->GetCameraCenter();
+        for (auto vCovKF : vCovKFs) {
+          if (vCovKF->mnId < vpKF->mnId) continue;
+          Eigen::Vector3f Ow2 = vCovKF->GetCameraCenter();
           glVertex3f(Ow(0), Ow(1), Ow(2));
           glVertex3f(Ow2(0), Ow2(1), Ow2(2));
         }
@@ -266,11 +263,9 @@ void MapDrawer::DrawKeyFrames(const bool bDrawKF, const bool bDrawGraph,
 
       // Loops
       set<KeyFrame*> sLoopKFs = vpKF->GetLoopEdges();
-      for (set<KeyFrame*>::iterator sit = sLoopKFs.begin(),
-                                    send = sLoopKFs.end();
-           sit != send; sit++) {
-        if ((*sit)->mnId < vpKF->mnId) continue;
-        Eigen::Vector3f Owl = (*sit)->GetCameraCenter();
+      for (auto sLoopKF : sLoopKFs) {
+        if (sLoopKF->mnId < vpKF->mnId) continue;
+        Eigen::Vector3f Owl = sLoopKF->GetCameraCenter();
         glVertex3f(Ow(0), Ow(1), Ow(2));
         glVertex3f(Owl(0), Owl(1), Owl(2));
       }

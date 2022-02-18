@@ -509,7 +509,7 @@ bool compFirst(const pair<float, KeyFrame*>& a,
 void KeyFrameDatabase::DetectNBestCandidates(KeyFrame* pKF,
                                              vector<KeyFrame*>& vpLoopCand,
                                              vector<KeyFrame*>& vpMergeCand,
-                                             int nNumCandidates) {
+                                             size_t nNumCandidates) {
   list<KeyFrame*> lKFsSharingWords;
   set<KeyFrame*> spConnectedKF;
 
@@ -592,7 +592,7 @@ void KeyFrameDatabase::DetectNBestCandidates(KeyFrame* pKF,
   vpLoopCand.reserve(nNumCandidates);
   vpMergeCand.reserve(nNumCandidates);
   set<KeyFrame*> spAlreadyAddedKF;
-  int i = 0;
+  size_t i = 0;
   auto it = lAccScoreAndMatch.begin();
   while (i < lAccScoreAndMatch.size() &&
          (vpLoopCand.size() < nNumCandidates ||

@@ -53,9 +53,9 @@ class TwoViewReconstruction {
   void FindFundamental(std::vector<bool>& vbInliers, float& score,
                        Eigen::Matrix3f& F21);
 
-  Eigen::Matrix3f ComputeH21(const std::vector<cv::Point2f>& vP1,
+  static Eigen::Matrix3f ComputeH21(const std::vector<cv::Point2f>& vP1,
                              const std::vector<cv::Point2f>& vP2);
-  Eigen::Matrix3f ComputeF21(const std::vector<cv::Point2f>& vP1,
+  static Eigen::Matrix3f ComputeF21(const std::vector<cv::Point2f>& vP1,
                              const std::vector<cv::Point2f>& vP2);
 
   float CheckHomography(const Eigen::Matrix3f& H21, const Eigen::Matrix3f& H12,
@@ -76,11 +76,11 @@ class TwoViewReconstruction {
                     std::vector<bool>& vbTriangulated, float minParallax,
                     int minTriangulated);
 
-  void Normalize(const std::vector<cv::KeyPoint>& vKeys,
+  static void Normalize(const std::vector<cv::KeyPoint>& vKeys,
                  std::vector<cv::Point2f>& vNormalizedPoints,
                  Eigen::Matrix3f& T);
 
-  int CheckRT(const Eigen::Matrix3f& R, const Eigen::Vector3f& t,
+  static int CheckRT(const Eigen::Matrix3f& R, const Eigen::Vector3f& t,
               const std::vector<cv::KeyPoint>& vKeys1,
               const std::vector<cv::KeyPoint>& vKeys2,
               const std::vector<Match>& vMatches12,
@@ -88,7 +88,7 @@ class TwoViewReconstruction {
               std::vector<cv::Point3f>& vP3D, float th2,
               std::vector<bool>& vbGood, float& parallax);
 
-  void DecomposeE(const Eigen::Matrix3f& E, Eigen::Matrix3f& R1,
+  static void DecomposeE(const Eigen::Matrix3f& E, Eigen::Matrix3f& R1,
                   Eigen::Matrix3f& R2, Eigen::Vector3f& t);
 
   // Keypoints from Reference Frame (Frame 1)

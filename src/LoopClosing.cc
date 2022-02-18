@@ -25,7 +25,6 @@
 #include <thread>
 
 #include "Converter.h"
-#include "G2oTypes.h"
 #include "ORBmatcher.h"
 #include "Optimizer.h"
 #include "Sim3Solver.h"
@@ -43,6 +42,12 @@ LoopClosing::LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB,
       mpKeyFrameDB(pDB),
       mpORBVocabulary(pVoc),
       mpMatchedKF(nullptr),
+      mbLoopDetected(false),
+      mnLoopNumCoincidences(0),
+      mnLoopNumNotFound(0),
+      mbMergeDetected(false),
+      mnMergeNumCoincidences(0),
+      mnMergeNumNotFound(0),
       mLastLoopKFid(0),
       mbRunningGBA(false),
       mbFinishedGBA(true),
@@ -50,12 +55,6 @@ LoopClosing::LoopClosing(Atlas* pAtlas, KeyFrameDatabase* pDB,
       mpThreadGBA(nullptr),
       mbFixScale(bFixScale),
       mnFullBAIdx(false),
-      mnLoopNumCoincidences(0),
-      mnMergeNumCoincidences(0),
-      mbLoopDetected(false),
-      mbMergeDetected(false),
-      mnLoopNumNotFound(0),
-      mnMergeNumNotFound(0),
       mbActiveLC(bActiveLC) {
   mnCovisibilityConsistencyTh = 3;
   mpLastCurrentKF = static_cast<KeyFrame*>(nullptr);
@@ -691,7 +690,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
                                static_cast<KeyFrame*>(nullptr));
 
     int nIndexMostBoWMatchesKF = 0;
-    for (int j = 0; j < vpCovKFi.size(); ++j) {
+    for (size_t j = 0; j < vpCovKFi.size(); ++j) {
       if (!vpCovKFi[j] || vpCovKFi[j]->isBad()) continue;
 
       int num =
@@ -702,8 +701,8 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
       }
     }
 
-    for (int j = 0; j < vpCovKFi.size(); ++j) {
-      for (int k = 0; k < vvpMatchedMPs[j].size(); ++k) {
+    for (size_t j = 0; j < vpCovKFi.size(); ++j) {
+      for (size_t k = 0; k < vvpMatchedMPs[j].size(); ++k) {
         MapPoint* pMPi_j = vvpMatchedMPs[j][k];
         if (!pMPi_j || pMPi_j->isBad()) continue;
 
@@ -865,7 +864,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
               vector<KeyFrame*> vpCurrentCovKFs =
                   mpCurrentKF->GetBestCovisibilityKeyFrames(nNumCovisibles);
 
-              int j = 0;
+              size_t j = 0;
               while (nNumKFs < 3 && j < vpCurrentCovKFs.size()) {
                 KeyFrame* pKFj = vpCurrentCovKFs[j];
                 Sophus::SE3d mTjc =
@@ -928,7 +927,7 @@ bool LoopClosing::DetectCommonRegionsFromBoW(
   } else {
     int maxStage = -1;
     int maxMatched;
-    for (int i = 0; i < vnStage.size(); ++i) {
+    for (size_t i = 0; i < vnStage.size(); ++i) {
       if (vnStage[i] > maxStage) {
         maxStage = vnStage[i];
         maxMatched = vnMatchesStage[i];
@@ -965,12 +964,12 @@ int LoopClosing::FindMatchesByProjection(
   vpCovKFm.push_back(pMatchedKFw);
   set<KeyFrame*> spCheckKFs(vpCovKFm.begin(), vpCovKFm.end());
   set<KeyFrame*> spCurrentCovisbles = pCurrentKF->GetConnectedKeyFrames();
-  if (nInitialCov < nNumCovisibles) {
-    for (int i = 0; i < nInitialCov; ++i) {
+  if (nInitialCov < (size_t)nNumCovisibles) {
+    for (size_t i = 0; i < nInitialCov; ++i) {
       vector<KeyFrame*> vpKFs =
           vpCovKFm[i]->GetBestCovisibilityKeyFrames(nNumCovisibles);
       int nInserted = 0;
-      int j = 0;
+      size_t j = 0;
       while (j < vpKFs.size() && nInserted < nNumCovisibles) {
         if (spCheckKFs.find(vpKFs[j]) == spCheckKFs.end() &&
             spCurrentCovisbles.find(vpKFs[j]) == spCurrentCovisbles.end()) {
@@ -1364,7 +1363,8 @@ void LoopClosing::MergeLocal() {
   spLocalWindowKFs.insert(mpCurrentKF);
   const int nMaxTries = 5;
   int nNumTries = 0;
-  while (spLocalWindowKFs.size() < numTemporalKFs && nNumTries < nMaxTries) {
+  while (spLocalWindowKFs.size() < (size_t)numTemporalKFs &&
+         nNumTries < nMaxTries) {
     vector<KeyFrame*> vpNewCovKFs;
     //    vpNewCovKFs.empty();
     for (KeyFrame* pKFi : spLocalWindowKFs) {
@@ -1418,7 +1418,7 @@ void LoopClosing::MergeLocal() {
   spMergeConnectedKFs.insert(vpCovisibleKFs.begin(), vpCovisibleKFs.end());
   spMergeConnectedKFs.insert(mpMergeMatchedKF);
   nNumTries = 0;
-  while (spMergeConnectedKFs.size() < numTemporalKFs && nNumTries < nMaxTries) {
+  while (spMergeConnectedKFs.size() < (size_t)numTemporalKFs && nNumTries < nMaxTries) {
     vector<KeyFrame*> vpNewCovKFs;
     for (KeyFrame* pKFi : spMergeConnectedKFs) {
       vector<KeyFrame*> vpKFiCov =
@@ -2196,7 +2196,7 @@ void LoopClosing::SearchAndFuse(const KeyFrameAndPose& CorrectedPosesMap,
     // Get Map Mutex
     unique_lock<mutex> lock(pMap->mMutexMapUpdate);
     const size_t nLP = vpMapPoints.size();
-    for (int i = 0; i < nLP; i++) {
+    for (size_t i = 0; i < nLP; i++) {
       MapPoint* pRep = vpReplacePoints[i];
       if (pRep) {
         num_replaces += 1;
@@ -2235,7 +2235,7 @@ void LoopClosing::SearchAndFuse(const vector<KeyFrame*>& vConectedKFs,
     // Get Map Mutex
     unique_lock<mutex> lock(pMap->mMutexMapUpdate);
     const size_t nLP = vpMapPoints.size();
-    for (int i = 0; i < nLP; i++) {
+    for (size_t i = 0; i < nLP; i++) {
       MapPoint* pRep = vpReplacePoints[i];
       if (pRep) {
         num_replaces += 1;

@@ -73,7 +73,7 @@ class KeyFrameDatabase {
                             vector<KeyFrame*>& vpMergeCand, int nMinWords);
   void DetectNBestCandidates(KeyFrame* pKF, vector<KeyFrame*>& vpLoopCand,
                              vector<KeyFrame*>& vpMergeCand,
-                             int nNumCandidates);
+                             size_t nNumCandidates);
 
   // Relocalization
   std::vector<KeyFrame*> DetectRelocalizationCandidates(Frame* F, Map* pMap);

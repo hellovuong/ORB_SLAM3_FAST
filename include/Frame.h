@@ -60,28 +60,28 @@ class Frame {
         ORBextractor* extractorLeft, ORBextractor* extractorRight,
         ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
         const float& thDepth, GeometricCamera* pCamera,
-        Frame* pPrevF = static_cast<Frame*>(NULL),
+        Frame* pPrevF = static_cast<Frame*>(nullptr),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Constructor for RGB-D cameras.
   Frame(const cv::Mat& imGray, const cv::Mat& imDepth, const double& timeStamp,
         ORBextractor* extractor, ORBVocabulary* voc, cv::Mat& K,
         cv::Mat& distCoef, const float& bf, const float& thDepth,
-        GeometricCamera* pCamera, Frame* pPrevF = static_cast<Frame*>(NULL),
+        GeometricCamera* pCamera, Frame* pPrevF = static_cast<Frame*>(nullptr),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Constructor for Monocular cameras.
   Frame(const cv::Mat& imGray, const double& timeStamp, ORBextractor* extractor,
         ORBVocabulary* voc, GeometricCamera* pCamera, cv::Mat& distCoef,
         const float& bf, const float& thDepth,
-        Frame* pPrevF = static_cast<Frame*>(NULL),
+        Frame* pPrevF = static_cast<Frame*>(nullptr),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Destructor
   // ~Frame();
 
   // Extract ORB on the image. 0 for left image and 1 for right image.
-  void ExtractORB(int flag, const cv::Mat& im, const int x0, const int x1);
+  void ExtractORB(int flag, const cv::Mat& im, int x0, int x1);
 
   // Compute Bag of Words representation.
   void ComputeBoW();
@@ -105,8 +105,6 @@ class Frame {
 
   Sophus::SE3f GetRelativePoseTrl();
   Sophus::SE3f GetRelativePoseTlr();
-  Eigen::Matrix3f GetRelativePoseTlr_rotation();
-  Eigen::Vector3f GetRelativePoseTlr_translation();
 
   void SetNewBias(const IMU::Bias& b);
 
@@ -122,9 +120,9 @@ class Frame {
   bool PosInGrid(const cv::KeyPoint& kp, int& posX, int& posY);
 
   vector<size_t> GetFeaturesInArea(const float& x, const float& y,
-                                   const float& r, const int minLevel = -1,
-                                   const int maxLevel = -1,
-                                   const bool bRight = false) const;
+                                   const float& r, int minLevel = -1,
+                                   int maxLevel = -1,
+                                   bool bRight = false) const;
 
   // Search a match for each keypoint in the left image to a keypoint in the
   // right image. If there is a match, depth is computed and the right
@@ -196,13 +194,13 @@ class Frame {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   // Vocabulary used for relocalization.
-  ORBVocabulary* mpORBvocabulary;
+  ORBVocabulary* mpORBvocabulary{};
 
   // Feature extractor. The right is used only in the stereo case.
-  ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
+  ORBextractor *mpORBextractorLeft{}, *mpORBextractorRight{};
 
   // Frame timestamp.
-  double mTimeStamp;
+  double mTimeStamp{};
 
   // Calibration matrix and OpenCV distortion parameters.
   cv::Mat mK;
@@ -216,17 +214,17 @@ class Frame {
   cv::Mat mDistCoef;
 
   // Stereo baseline multiplied by fx.
-  float mbf;
+  float mbf{};
 
   // Stereo baseline in meters.
-  float mb;
+  float mb{};
 
   // Threshold close/far points. Close points are inserted from 1 view.
   // Far points are inserted as in the monocular case from 2 views.
-  float mThDepth;
+  float mThDepth{};
 
   // Number of KeyPoints.
-  int N;
+  int N{};
 
   // Vector of keypoints (original for visualization) and undistorted (actually
   // used by the system). In the stereo case, mvKeysUn is redundant as images
@@ -250,7 +248,7 @@ class Frame {
   // MapPoints associated to keypoints, NULL pointer if no association.
   // Flag to identify outlier associations.
   std::vector<bool> mvbOutlier;
-  int mnCloseMPs;
+  int mnCloseMPs{};
 
   // Keypoints are assigned to cells in a grid to reduce matching complexity
   // when projecting MapPoints.
@@ -271,7 +269,7 @@ class Frame {
   ODOM::Preintegrated* mpOdomPreintegrated;
   //  ODOM::Meas mOdomMeas;
 
-  KeyFrame* mpLastKeyFrame;
+  KeyFrame* mpLastKeyFrame{};
 
   // Pointer to previous frame
   Frame* mpPrevFrame;
@@ -280,15 +278,15 @@ class Frame {
 
   // Current and Next Frame id.
   static long unsigned int nNextId;
-  long unsigned int mnId;
+  long unsigned int mnId{};
 
   // Reference Keyframe.
   KeyFrame* mpReferenceKF;
 
   // Scale pyramid info.
-  int mnScaleLevels;
-  float mfScaleFactor;
-  float mfLogScaleFactor;
+  int mnScaleLevels{};
+  float mfScaleFactor{};
+  float mfLogScaleFactor{};
   vector<float> mvScaleFactors;
   vector<float> mvInvScaleFactors;
   vector<float> mvLevelSigma2;
@@ -307,11 +305,11 @@ class Frame {
 
   string mNameFile;
 
-  int mnDataset;
+  int mnDataset{};
 
 #ifdef REGISTER_TIMES
   double mTimeORB_Ext;
-  double mTimeStereoMatch;
+  double mTimeStereoMatch{};
 #endif
 
  private:
@@ -332,15 +330,15 @@ class Frame {
 
   bool mbImuPreintegrated;
 
-  std::mutex* mpMutexImu;
+  std::mutex* mpMutexImu{};
 
  public:
-  GeometricCamera *mpCamera, *mpCamera2;
+  GeometricCamera *mpCamera{}, *mpCamera2{};
 
   // Number of KeyPoints extracted in the left and right images
-  int Nleft, Nright;
+  int Nleft{}, Nright{};
   // Number of Non Lapping Keypoints
-  int monoLeft, monoRight;
+  int monoLeft{}, monoRight{};
 
   // For stereo matching
   std::vector<int> mvLeftToRightMatch, mvRightToLeftMatch;
@@ -360,7 +358,7 @@ class Frame {
         ORBVocabulary* voc, cv::Mat& K, cv::Mat& distCoef, const float& bf,
         const float& thDepth, GeometricCamera* pCamera,
         GeometricCamera* pCamera2, Sophus::SE3f& Tlr,
-        Frame* pPrevF = static_cast<Frame*>(NULL),
+        Frame* pPrevF = static_cast<Frame*>(nullptr),
         const IMU::Calib& ImuCalib = IMU::Calib());
 
   // Stereo fisheye

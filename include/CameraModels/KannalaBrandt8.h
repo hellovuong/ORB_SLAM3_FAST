@@ -22,7 +22,7 @@
 #ifndef CAMERAMODELS_KANNALABRANDT8_H
 #define CAMERAMODELS_KANNALABRANDT8_H
 
-#include <assert.h>
+#include <cassert>
 
 #include "GeometricCamera.h"
 
@@ -39,15 +39,15 @@ class KannalaBrandt8 : public GeometricCamera {
   }
 
  public:
-  KannalaBrandt8() : precision(1e-6) {
+  KannalaBrandt8() : precision(1e-6), tvr(nullptr) {
     mvParameters.resize(8);
     mnId = nNextId++;
     mnType = CAM_FISHEYE;
   }
   KannalaBrandt8(const std::vector<float> _vParameters)
       : GeometricCamera(_vParameters),
-        precision(1e-6),
         mvLappingArea(2, 0),
+        precision(1e-6),
         tvr(nullptr) {
     assert(mvParameters.size() == 8);
     mnId = nNextId++;
@@ -56,16 +56,17 @@ class KannalaBrandt8 : public GeometricCamera {
 
   KannalaBrandt8(const std::vector<float> _vParameters, const float _precision)
       : GeometricCamera(_vParameters),
+        mvLappingArea(2, 0),
         precision(_precision),
-        mvLappingArea(2, 0) {
+        tvr(nullptr){
     assert(mvParameters.size() == 8);
     mnId = nNextId++;
     mnType = CAM_FISHEYE;
   }
   KannalaBrandt8(KannalaBrandt8* pKannala)
       : GeometricCamera(pKannala->mvParameters),
-        precision(pKannala->precision),
         mvLappingArea(2, 0),
+        precision(pKannala->precision),
         tvr(nullptr) {
     assert(mvParameters.size() == 8);
     mnId = nNextId++;
@@ -96,26 +97,26 @@ class KannalaBrandt8 : public GeometricCamera {
 
   bool epipolarConstrain(GeometricCamera* pCamera2, const cv::KeyPoint& kp1,
                          const cv::KeyPoint& kp2, const Eigen::Matrix3f& R12,
-                         const Eigen::Vector3f& t12, const float sigmaLevel,
-                         const float unc);
+                         const Eigen::Vector3f& t12, float sigmaLevel,
+                         float unc);
 
   float TriangulateMatches(GeometricCamera* pCamera2, const cv::KeyPoint& kp1,
                            const cv::KeyPoint& kp2, const Eigen::Matrix3f& R12,
-                           const Eigen::Vector3f& t12, const float sigmaLevel,
-                           const float unc, Eigen::Vector3f& p3D);
+                           const Eigen::Vector3f& t12, float sigmaLevel,
+                           float unc, Eigen::Vector3f& p3D);
 
   std::vector<int> mvLappingArea;
 
   bool matchAndtriangulate(const cv::KeyPoint& kp1, const cv::KeyPoint& kp2,
                            GeometricCamera* pOther, Sophus::SE3f& Tcw1,
-                           Sophus::SE3f& Tcw2, const float sigmaLevel1,
-                           const float sigmaLevel2,
+                           Sophus::SE3f& Tcw2, float sigmaLevel1,
+                           float sigmaLevel2,
                            Eigen::Vector3f& x3Dtriangulated);
 
   friend std::ostream& operator<<(std::ostream& os, const KannalaBrandt8& kb);
   friend std::istream& operator>>(std::istream& is, KannalaBrandt8& kb);
 
-  float GetPrecision() { return precision; }
+  float GetPrecision() const { return precision; }
 
   bool IsEqual(GeometricCamera* pCam);
 

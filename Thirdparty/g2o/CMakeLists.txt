@@ -60,8 +60,8 @@ ENDIF(OPENMP_FOUND AND G2O_USE_OPENMP)
  SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 
 # activate warnings !!!
-SET(g2o_C_FLAGS "${g2o_C_FLAGS} -Wall -W")
-SET(g2o_CXX_FLAGS "${g2o_CXX_FLAGS} -Wall -W")
+SET(g2o_C_FLAGS "${g2o_C_FLAGS} -Wall -Wno-deprecated -Wno-deprecated-declarations -W")
+SET(g2o_CXX_FLAGS "${g2o_CXX_FLAGS} -Wall -Wno-deprecated -Wno-deprecated-declarations -W")
 
 # specifying compiler flags
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${g2o_CXX_FLAGS}")

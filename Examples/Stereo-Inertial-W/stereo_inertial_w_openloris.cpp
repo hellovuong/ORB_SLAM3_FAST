@@ -97,7 +97,6 @@ int main(int argc, char** argv) {
   }
 
   // Load all sequences:
-  int seq;
   vector<vector<string>> vstrImageLeft;
   vector<vector<string>> vstrImageRight;
   vector<vector<double>> vTimestampsCam;
@@ -132,7 +131,7 @@ int main(int argc, char** argv) {
 
   int tot_images = 0;
 
-  for (int i = 0; i < num_seq; ++i) {
+  for (int seq = 0; seq < num_seq; ++seq) {
     cout << "Loading data for sequence " << seq << "...\n";
 
     string pathSeq(argv[(2 * seq) + 3]);
@@ -209,7 +208,7 @@ int main(int argc, char** argv) {
   ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::IMU_STEREO, true);
 
   cv::Mat imLeft, imRight;
-  for (seq = 0; seq < num_seq; seq++) {
+  for (int seq = 0; seq < num_seq; seq++) {
     double t_rect = 0.f;
     double t_resize = 0.f;
     double t_track = 0.f;
@@ -297,7 +296,7 @@ int main(int argc, char** argv) {
       else if (ni > 0)
         T = tframe - vTimestampsCam[seq][ni - 1];
 
-      if (ttrack < T) usleep((unsigned int)((T - ttrack) * 1e6));  // 1e6
+      if (ttrack < T) usleep((unsigned int)((T - ttrack) * 1e6));
     }
     std::cout << "Finish seq " << std::endl;
     if (seq < num_seq - 1) {

@@ -263,6 +263,8 @@ class Tracking {
   IMU::Bias mLastBias;
 
   // WOdometry stuffs
+  // Boolean use or not WOdometry factor
+  bool mbUseOdom;
   // Queue of WOdometry measurement between frames
   std::list<ODOM::Meas> mlQueueOdomData;
   std::mutex mMutexOdomQueue;

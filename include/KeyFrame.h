@@ -223,7 +223,7 @@ class KeyFrame {
   void UpdateBestCovisibles();
   std::set<KeyFrame*> GetConnectedKeyFrames();
   std::vector<KeyFrame*> GetVectorCovisibleKeyFrames();
-  std::vector<KeyFrame*> GetBestCovisibilityKeyFrames(const int& N);
+  std::vector<KeyFrame*> GetBestCovisibilityKeyFrames(const int& N_);
   std::vector<KeyFrame*> GetCovisiblesByWeight(const int& w);
   int GetWeight(KeyFrame* pKF);
 
@@ -304,13 +304,13 @@ class KeyFrame {
   void SetORBVocabulary(ORBVocabulary* pORBVoc);
   void SetKeyFrameDatabase(KeyFrameDatabase* pKFDB);
 
-  bool bImu;
+  bool bImu{};
 
   // The following variables are accesed from only 1 thread or never change (no
   // mutex needed).
  public:
   static long unsigned int nNextId;
-  long unsigned int mnId;
+  long unsigned int mnId{};
   const long unsigned int mnFrameId;
 
   const double mTimeStamp;
@@ -335,13 +335,13 @@ class KeyFrame {
   // Variables used by the keyframe database
   long unsigned int mnLoopQuery;
   int mnLoopWords;
-  float mLoopScore;
+  float mLoopScore{};
   long unsigned int mnRelocQuery;
   int mnRelocWords;
-  float mRelocScore;
-  long unsigned int mnMergeQuery;
-  int mnMergeWords;
-  float mMergeScore;
+  float mRelocScore{};
+  long unsigned int mnMergeQuery{};
+  int mnMergeWords{};
+  float mMergeScore{};
   long unsigned int mnPlaceRecognitionQuery;
   int mnPlaceRecognitionWords;
   float mPlaceRecognitionScore;
@@ -364,11 +364,11 @@ class KeyFrame {
   Eigen::Vector3f mVwbBefMerge;
   IMU::Bias mBiasMerge;
   long unsigned int mnMergeCorrectedForKF;
-  long unsigned int mnMergeForKF;
-  float mfScaleMerge;
+  long unsigned int mnMergeForKF{};
+  float mfScaleMerge{};
   long unsigned int mnBALocalForMerge;
 
-  float mfScale;
+  float mfScale{};
 
   // Calibration parameters
   const float fx, fy, cx, cy, invfx, invfy, mbf, mb, mThDepth;
@@ -409,16 +409,16 @@ class KeyFrame {
   KeyFrame* mPrevKF;
   KeyFrame* mNextKF;
 
-  IMU::Preintegrated* mpImuPreintegrated;
+  IMU::Preintegrated* mpImuPreintegrated{};
   IMU::Calib mImuCalib;
 
-  ODOM::Preintegrated* mpOdomPreintegrated;
+  ODOM::Preintegrated* mpOdomPreintegrated{};
 
-  unsigned int mnOriginMapId;
+  unsigned int mnOriginMapId{};
 
   string mNameFile;
 
-  int mnDataset;
+  int mnDataset{};
 
   std::vector<KeyFrame*> mvpLoopCandKFs;
   std::vector<KeyFrame*> mvpMergeCandKFs;
@@ -454,8 +454,8 @@ class KeyFrame {
   std::vector<long long int> mvBackupMapPointsId;
 
   // BoW
-  KeyFrameDatabase* mpKeyFrameDB;
-  ORBVocabulary* mpORBvocabulary;
+  KeyFrameDatabase* mpKeyFrameDB{};
+  ORBVocabulary* mpORBvocabulary{};
 
   // Grid over the image to speed up feature matching
   std::vector<std::vector<std::vector<size_t> > > mGrid;
@@ -473,7 +473,7 @@ class KeyFrame {
   std::set<KeyFrame*> mspLoopEdges;
   std::set<KeyFrame*> mspMergeEdges;
   // For save relation without pointer, this is necessary for save/load function
-  long long int mBackupParentId;
+  long long int mBackupParentId{};
   std::vector<long unsigned int> mvBackupChildrensId;
   std::vector<long unsigned int> mvBackupLoopEdgesId;
   std::vector<long unsigned int> mvBackupMergeEdgesId;
@@ -485,15 +485,15 @@ class KeyFrame {
 
   float mHalfBaseline;  // Only for visualization
 
-  Map* mpMap;
+  Map* mpMap{};
 
   // Backup variables for inertial
-  long long int mBackupPrevKFId;
-  long long int mBackupNextKFId;
+  long long int mBackupPrevKFId{};
+  long long int mBackupNextKFId{};
   IMU::Preintegrated mBackupImuPreintegrated;
 
   // Backup for Cameras
-  unsigned int mnBackupIdCamera, mnBackupIdCamera2;
+  unsigned int mnBackupIdCamera{}, mnBackupIdCamera2{};
 
   // Calibration
   Eigen::Matrix3f mK_;
@@ -505,7 +505,7 @@ class KeyFrame {
   std::mutex mMutexMap;
 
  public:
-  GeometricCamera *mpCamera, *mpCamera2;
+  GeometricCamera *mpCamera{}, *mpCamera2{};
 
   // Indexes of stereo observations correspondences
   std::vector<int> mvLeftToRightMatch, mvRightToLeftMatch;

@@ -115,8 +115,6 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
   mStrVocabularyFilePath = strVocFile;
 
-  bool loadedAtlas = false;
-
   if (mStrLoadAtlasFromFile.empty()) {
     // Load ORB Vocabulary
     cout << endl
@@ -172,8 +170,6 @@ System::System(const string& strVocFile, const string& strSettingsFile,
 
     // cout << "KF in DB: " << mpKeyFrameDatabase->mnNumKFs << "; words: " <<
     // mpKeyFrameDatabase->mnNumWords << endl;
-
-    loadedAtlas = true;
 
     mpAtlas->CreateNewMap();
 
@@ -652,14 +648,14 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
 
   vector<Map*> vpMaps = mpAtlas->GetAllMaps();
   int numMaxKFs = 0;
-  Map* pBiggerMap;
+  Map* pBiggerMap = nullptr;
   std::cout << "There are " << std::to_string(vpMaps.size())
             << " maps in the atlas" << std::endl;
   for (Map* pMap : vpMaps) {
     std::cout << "  Map " << std::to_string(pMap->GetId()) << " has "
               << std::to_string(pMap->GetAllKeyFrames().size()) << " KFs"
               << std::endl;
-    if (pMap->GetAllKeyFrames().size() > numMaxKFs) {
+    if ((int)pMap->GetAllKeyFrames().size() > numMaxKFs) {
       numMaxKFs = pMap->GetAllKeyFrames().size();
       pBiggerMap = pMap;
     }
@@ -768,8 +764,6 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
       cerr << "ERROR: SaveTrajectoryEuRoC cannot be used for monocular." <<
   endl; return;
   }*/
-
-  int numMaxKFs = 0;
 
   vector<KeyFrame*> vpKFs = pMap->GetAllKeyFrames();
   sort(vpKFs.begin(), vpKFs.end(), KeyFrame::lId);
@@ -1062,10 +1056,10 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
        << "Saving keyframe trajectory to " << filename << " ..." << endl;
 
   vector<Map*> vpMaps = mpAtlas->GetAllMaps();
-  Map* pBiggerMap;
+  Map* pBiggerMap = nullptr;
   int numMaxKFs = 0;
   for (Map* pMap : vpMaps) {
-    if (pMap && pMap->GetAllKeyFrames().size() > numMaxKFs) {
+    if (pMap && ((int)pMap->GetAllKeyFrames().size() > numMaxKFs)) {
       numMaxKFs = pMap->GetAllKeyFrames().size();
       pBiggerMap = pMap;
     }
@@ -1085,9 +1079,7 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename) {
   f.open(filename.c_str());
   f << fixed;
 
-  for (size_t i = 0; i < vpKFs.size(); i++) {
-    KeyFrame* pKF = vpKFs[i];
-
+  for (auto pKF : vpKFs) {
     // pKF->SetPose(pKF->GetPose()*Two);
 
     if (!pKF || pKF->isBad()) continue;
@@ -1544,14 +1536,14 @@ void System::SaveTrajectoryUZH(const string& filename) {
 
   vector<Map*> vpMaps = mpAtlas->GetAllMaps();
   int numMaxKFs = 0;
-  Map* pBiggerMap;
+  Map* pBiggerMap = nullptr;
   std::cout << "There are " << std::to_string(vpMaps.size())
             << " maps in the atlas" << std::endl;
   for (Map* pMap : vpMaps) {
     std::cout << "  Map " << std::to_string(pMap->GetId()) << " has "
               << std::to_string(pMap->GetAllKeyFrames().size()) << " KFs"
               << std::endl;
-    if (pMap->GetAllKeyFrames().size() > numMaxKFs) {
+    if ((int)pMap->GetAllKeyFrames().size() > numMaxKFs) {
       numMaxKFs = pMap->GetAllKeyFrames().size();
       pBiggerMap = pMap;
     }

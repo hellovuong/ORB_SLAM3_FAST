@@ -54,7 +54,7 @@ float Settings::readParameter<float>(cv::FileStorage& fSettings,
     exit(-1);
   } else {
     found = true;
-    return node.real();
+    return (float)node.real();
   }
 }
 
@@ -80,6 +80,34 @@ int Settings::readParameter<int>(cv::FileStorage& fSettings,
   } else {
     found = true;
     return node.operator int();
+  }
+}
+
+template <>
+bool Settings::readParameter<bool>(cv::FileStorage& fSettings,
+                                   const std::string& name, bool& found,
+                                   const bool required) {
+  cv::FileNode node = fSettings[name];
+  if (node.empty()) {
+    if (required) {
+      std::cerr << name << " required parameter does not exist, aborting..."
+                << std::endl;
+      exit(-1);
+    } else {
+      std::cerr
+          << name
+          << " optional parameter does not exist... Not using Odometry Factor"
+          << std::endl;
+      found = false;
+      return false;
+    }
+  } else if (!node.isInt()) {
+    std::cerr << name << " parameter must be an integer number, aborting..."
+              << std::endl;
+    exit(-1);
+  } else {
+    found = true;
+    return (bool)node.operator int();
   }
 }
 
@@ -133,7 +161,12 @@ Settings::Settings(const std::string& configFile, const int& sensor)
     : bNeedToUndistort_(false),
       bNeedToRectify_(false),
       bNeedToResize1_(false),
-      bNeedToResize2_(false) {
+      bNeedToResize2_(false),
+      bUseOdom_(false),
+      NoiseX_(0.f),
+      NoiseY_(0.f),
+      NoiseRotZ_(0.f),
+      Tbo_(Sophus::SE3f()) {
   sensor_ = sensor;
 
   // Open settings file
@@ -471,11 +504,14 @@ void Settings::readRGBD(cv::FileStorage& fSettings) {
 }
 void Settings::readOdom(cv::FileStorage& fSettings) {
   bool found;
-  NoiseX_ = readParameter<float>(fSettings, "Odom.NoiseX", found);
-  NoiseY_ = readParameter<float>(fSettings, "Odom.NoiseY", found);
-  NoiseRotZ_ = readParameter<float>(fSettings, "Odom.NoiseRotZ", found);
-  Tbo_ = Converter::toSophus(
-      readParameter<cv::Mat>(fSettings, "Odom.T_b_o", found));
+  bUseOdom_ = readParameter<bool>(fSettings, "Odom", found, false);
+  if (bUseOdom_) {
+    NoiseX_ = readParameter<float>(fSettings, "Odom.NoiseX", found);
+    NoiseY_ = readParameter<float>(fSettings, "Odom.NoiseY", found);
+    NoiseRotZ_ = readParameter<float>(fSettings, "Odom.NoiseRotZ", found);
+    Tbo_ = Converter::toSophus(
+        readParameter<cv::Mat>(fSettings, "Odom.T_b_o", found));
+  }
 }
 void Settings::readORB(cv::FileStorage& fSettings) {
   bool found;
@@ -605,7 +641,7 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
     } else {
       output << "Kannala-Brandt";
     }
-    if (settings.originalCalib2_ != static_cast<GeometricCamera*>(NULL)) {
+    if (settings.originalCalib2_ != static_cast<GeometricCamera*>(nullptr)) {
       output << ""
              << ": [";
       for (size_t i = 0; i < settings.originalCalib2_->size(); i++) {
@@ -695,4 +731,4 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
 
   return output;
 }
-};  // namespace ORB_SLAM3
+}  // namespace ORB_SLAM3

@@ -769,7 +769,7 @@ void MLPnPsolver::mlpnp_residuals_and_jacs(
 
   Eigen::MatrixXd jacs(2, 6);
 
-  for (int i = 0; i < pts.size(); ++i) {
+  for (size_t i = 0; i < pts.size(); ++i) {
     Eigen::Vector3d ptCam = R * pts[i] + T;
     ptCam /= ptCam.norm();
 

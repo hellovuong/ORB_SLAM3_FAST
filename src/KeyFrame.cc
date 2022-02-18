@@ -39,23 +39,26 @@ KeyFrame::KeyFrame()
       mnFuseTargetForKF(0),
       mnBALocalForKF(0),
       mnBAFixedForKF(0),
-      mnBALocalForMerge(0),
+      mnNumberOfOpt(0),
       mnLoopQuery(0),
       mnLoopWords(0),
       mnRelocQuery(0),
       mnRelocWords(0),
       mnMergeQuery(0),
       mnMergeWords(0),
+      mnPlaceRecognitionQuery(0),
+      mnPlaceRecognitionWords(0),
+      mPlaceRecognitionScore(0),
+      mbCurrentPlaceRecognition(false),
       mnBAGlobalForKF(0),
+      mnMergeCorrectedForKF(0),
+      mnBALocalForMerge(0),
       fx(0),
       fy(0),
       cx(0),
       cy(0),
       invfx(0),
       invfy(0),
-      mnPlaceRecognitionQuery(0),
-      mnPlaceRecognitionWords(0),
-      mPlaceRecognitionScore(0),
       mbf(0),
       mb(0),
       mThDepth(0),
@@ -76,18 +79,15 @@ KeyFrame::KeyFrame()
       mnMaxY(0),
       mPrevKF(static_cast<KeyFrame *>(nullptr)),
       mNextKF(static_cast<KeyFrame *>(nullptr)),
+      mbHasVelocity(false),
       mbFirstConnection(true),
       mpParent(nullptr),
       mbNotErase(false),
       mbToBeErased(false),
       mbBad(false),
       mHalfBaseline(0),
-      mbCurrentPlaceRecognition(false),
-      mnMergeCorrectedForKF(0),
       NLeft(0),
-      NRight(0),
-      mnNumberOfOpt(0),
-      mbHasVelocity(false) {}
+      NRight(0) {}
 
 KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
     : bImu(pMap->isImuInitialized()),
@@ -95,30 +95,34 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
       mTimeStamp(F.mTimeStamp),
       mnGridCols(FRAME_GRID_COLS),
       mnGridRows(FRAME_GRID_ROWS),
-      mfGridElementWidthInv(F.mfGridElementWidthInv),
-      mfGridElementHeightInv(F.mfGridElementHeightInv),
+      mfGridElementWidthInv(ORB_SLAM3::Frame::mfGridElementWidthInv),
+      mfGridElementHeightInv(ORB_SLAM3::Frame::mfGridElementHeightInv),
       mnTrackReferenceForFrame(0),
       mnFuseTargetForKF(0),
       mnBALocalForKF(0),
       mnBAFixedForKF(0),
-      mnBALocalForMerge(0),
+      mnNumberOfOpt(0),
       mnLoopQuery(0),
       mnLoopWords(0),
       mnRelocQuery(0),
       mnRelocWords(0),
-      mnBAGlobalForKF(0),
       mnPlaceRecognitionQuery(0),
       mnPlaceRecognitionWords(0),
       mPlaceRecognitionScore(0),
-      fx(F.fx),
-      fy(F.fy),
-      cx(F.cx),
-      cy(F.cy),
-      invfx(F.invfx),
-      invfy(F.invfy),
+      mbCurrentPlaceRecognition(false),
+      mnBAGlobalForKF(0),
+      mnMergeCorrectedForKF(0),
+      mnBALocalForMerge(0),
+      fx(ORB_SLAM3::Frame::fx),
+      fy(ORB_SLAM3::Frame::fy),
+      cx(ORB_SLAM3::Frame::cx),
+      cy(ORB_SLAM3::Frame::cy),
+      invfx(ORB_SLAM3::Frame::invfx),
+      invfy(ORB_SLAM3::Frame::invfy),
       mbf(F.mbf),
       mb(F.mb),
       mThDepth(F.mThDepth),
+      mDistCoef(F.mDistCoef),
       N(F.N),
       mvKeys(F.mvKeys),
       mvKeysUn(F.mvKeysUn),
@@ -133,42 +137,38 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB)
       mvScaleFactors(F.mvScaleFactors),
       mvLevelSigma2(F.mvLevelSigma2),
       mvInvLevelSigma2(F.mvInvLevelSigma2),
-      mnMinX(F.mnMinX),
-      mnMinY(F.mnMinY),
-      mnMaxX(F.mnMaxX),
-      mnMaxY(F.mnMaxY),
-      mK_(F.mK_),
+      mnMinX((int)ORB_SLAM3::Frame::mnMinX),
+      mnMinY((int)ORB_SLAM3::Frame::mnMinY),
+      mnMaxX((int)ORB_SLAM3::Frame::mnMaxX),
+      mnMaxY((int)ORB_SLAM3::Frame::mnMaxY),
       mPrevKF(nullptr),
       mNextKF(nullptr),
       mpImuPreintegrated(F.mpImuPreintegrated),
       mImuCalib(F.mImuCalib),
       mpOdomPreintegrated(F.mpOdomPreintegrated),
+      mNameFile(F.mNameFile),
+      mnDataset(F.mnDataset),
+      mbHasVelocity(false),
+      mTlr(F.GetRelativePoseTlr()),
+      mTrl(F.GetRelativePoseTrl()),
       mvpMapPoints(F.mvpMapPoints),
       mpKeyFrameDB(pKFDB),
       mpORBvocabulary(F.mpORBvocabulary),
       mbFirstConnection(true),
       mpParent(nullptr),
-      mDistCoef(F.mDistCoef),
       mbNotErase(false),
-      mnDataset(F.mnDataset),
       mbToBeErased(false),
       mbBad(false),
       mHalfBaseline(F.mb / 2),
       mpMap(pMap),
-      mbCurrentPlaceRecognition(false),
-      mNameFile(F.mNameFile),
-      mnMergeCorrectedForKF(0),
+      mK_(F.mK_),
       mpCamera(F.mpCamera),
       mpCamera2(F.mpCamera2),
       mvLeftToRightMatch(F.mvLeftToRightMatch),
       mvRightToLeftMatch(F.mvRightToLeftMatch),
-      mTlr(F.GetRelativePoseTlr()),
       mvKeysRight(F.mvKeysRight),
       NLeft(F.Nleft),
-      NRight(F.Nright),
-      mTrl(F.GetRelativePoseTrl()),
-      mnNumberOfOpt(0),
-      mbHasVelocity(false) {
+      NRight(F.Nright) {
   mnId = nNextId++;
 
   mGrid.resize(mnGridCols);
@@ -326,12 +326,12 @@ vector<KeyFrame *> KeyFrame::GetVectorCovisibleKeyFrames() {
   return mvpOrderedConnectedKeyFrames;
 }
 
-vector<KeyFrame *> KeyFrame::GetBestCovisibilityKeyFrames(const int &N) {
+vector<KeyFrame *> KeyFrame::GetBestCovisibilityKeyFrames(const int &N_) {
   unique_lock<mutex> lock(mMutexConnections);
-  return (int)mvpOrderedConnectedKeyFrames.size() < N
+  return (int)mvpOrderedConnectedKeyFrames.size() < N_
              ? mvpOrderedConnectedKeyFrames
              : vector<KeyFrame *>(mvpOrderedConnectedKeyFrames.begin(),
-                                  mvpOrderedConnectedKeyFrames.begin() + N);
+                                  mvpOrderedConnectedKeyFrames.begin() + N_);
 }
 
 vector<KeyFrame *> KeyFrame::GetCovisiblesByWeight(const int &w) {
@@ -384,9 +384,9 @@ void KeyFrame::EraseMapPointMatch(const int &idx) {
 void KeyFrame::EraseMapPointMatch(MapPoint *pMP) {
   tuple<size_t, size_t> indexes = pMP->GetIndexInKeyFrame(this);
   size_t leftIndex = get<0>(indexes), rightIndex = get<1>(indexes);
-  if (leftIndex != -1)
+  if ((int)leftIndex != -1)
     mvpMapPoints[leftIndex] = static_cast<MapPoint *>(nullptr);
-  if (rightIndex != -1)
+  if ((int)rightIndex != -1)
     mvpMapPoints[rightIndex] = static_cast<MapPoint *>(nullptr);
 }
 
@@ -739,9 +739,9 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y,
       const vector<size_t> vCell =
           (!bRight) ? mGrid[ix][iy] : mGridRight[ix][iy];
       for (unsigned long j : vCell) {
-        const cv::KeyPoint &kpUn = (NLeft == -1)
-                                       ? mvKeysUn[j]
-                                       : (!bRight) ? mvKeys[j] : mvKeysRight[j];
+        const cv::KeyPoint &kpUn = (NLeft == -1) ? mvKeysUn[j]
+                                   : (!bRight)   ? mvKeys[j]
+                                                 : mvKeysRight[j];
         const float distx = kpUn.pt.x - x;
         const float disty = kpUn.pt.y - y;
 
@@ -754,7 +754,8 @@ vector<size_t> KeyFrame::GetFeaturesInArea(const float &x, const float &y,
 }
 
 bool KeyFrame::IsInImage(const float &x, const float &y) const {
-  return (x >= mnMinX && x < mnMaxX && y >= mnMinY && y < mnMaxY);
+  return (x >= (float)mnMinX && x < (float)mnMaxX && y >= (float)mnMinY &&
+          y < (float)mnMaxY);
 }
 
 bool KeyFrame::UnprojectStereo(int i, Eigen::Vector3f &x3D) {
@@ -931,12 +932,9 @@ void KeyFrame::PostLoad(map<long unsigned int, KeyFrame *> &mpKFid,
 
   // Conected KeyFrames with him weight
   mConnectedKeyFrameWeights.clear();
-  for (map<long unsigned int, int>::const_iterator
-           it = mBackupConnectedKeyFrameIdWeights.begin(),
-           end = mBackupConnectedKeyFrameIdWeights.end();
-       it != end; ++it) {
-    KeyFrame *pKFi = mpKFid[it->first];
-    mConnectedKeyFrameWeights[pKFi] = it->second;
+  for (auto mBackupConnectedKeyFrameIdWeight : mBackupConnectedKeyFrameIdWeights) {
+    KeyFrame *pKFi = mpKFid[mBackupConnectedKeyFrameIdWeight.first];
+    mConnectedKeyFrameWeights[pKFi] = mBackupConnectedKeyFrameIdWeight.second;
   }
 
   // Restore parent KeyFrame
@@ -944,29 +942,20 @@ void KeyFrame::PostLoad(map<long unsigned int, KeyFrame *> &mpKFid,
 
   // KeyFrame childrens
   mspChildrens.clear();
-  for (vector<long unsigned int>::const_iterator
-           it = mvBackupChildrensId.begin(),
-           end = mvBackupChildrensId.end();
-       it != end; ++it) {
-    mspChildrens.insert(mpKFid[*it]);
+  for (unsigned long it : mvBackupChildrensId) {
+    mspChildrens.insert(mpKFid[it]);
   }
 
   // Loop edge KeyFrame
   mspLoopEdges.clear();
-  for (vector<long unsigned int>::const_iterator
-           it = mvBackupLoopEdgesId.begin(),
-           end = mvBackupLoopEdgesId.end();
-       it != end; ++it) {
-    mspLoopEdges.insert(mpKFid[*it]);
+  for (unsigned long it : mvBackupLoopEdgesId) {
+    mspLoopEdges.insert(mpKFid[it]);
   }
 
   // Merge edge KeyFrame
   mspMergeEdges.clear();
-  for (vector<long unsigned int>::const_iterator
-           it = mvBackupMergeEdgesId.begin(),
-           end = mvBackupMergeEdgesId.end();
-       it != end; ++it) {
-    mspMergeEdges.insert(mpKFid[*it]);
+  for (unsigned long it : mvBackupMergeEdgesId) {
+    mspMergeEdges.insert(mpKFid[it]);
   }
 
   // Camera data

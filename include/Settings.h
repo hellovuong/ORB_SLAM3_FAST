@@ -24,11 +24,12 @@
 
 // Flag to activate the measurement of time in each process (track,localmap,
 // place recognition).
-//#define REGISTER_TIMES
+#define REGISTER_TIMES
+#define REGISTER_LOOP
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include <string>
 
@@ -69,30 +70,30 @@ class Settings {
   GeometricCamera* camera1() { return calibration1_; }
   GeometricCamera* camera2() { return calibration2_; }
   cv::Mat camera1DistortionCoef() {
-    return cv::Mat(vPinHoleDistorsion1_.size(), 1, CV_32F,
+    return cv::Mat((int)vPinHoleDistorsion1_.size(), 1, CV_32F,
                    vPinHoleDistorsion1_.data());
   }
   cv::Mat camera2DistortionCoef() {
-    return cv::Mat(vPinHoleDistorsion2_.size(), 1, CV_32F,
+    return cv::Mat((int)vPinHoleDistorsion2_.size(), 1, CV_32F,
                    vPinHoleDistorsion1_.data());
   }
 
   Sophus::SE3f Tlr() { return Tlr_; }
-  float bf() { return bf_; }
-  float b() { return b_; }
-  float thDepth() { return thDepth_; }
+  float bf() const { return bf_; }
+  float b() const { return b_; }
+  float thDepth() const { return thDepth_; }
 
-  bool needToUndistort() { return bNeedToUndistort_; }
+  bool needToUndistort() const { return bNeedToUndistort_; }
 
   cv::Size newImSize() { return newImSize_; }
-  float fps() { return fps_; }
-  bool rgb() { return bRGB_; }
-  bool needToResize() { return bNeedToResize1_; }
-  bool needToRectify() { return bNeedToRectify_; }
+  float fps() const { return fps_; }
+  bool rgb() const { return bRGB_; }
+  bool needToResize() const { return bNeedToResize1_; }
+  bool needToRectify() const { return bNeedToRectify_; }
 
-  float noiseGyro() { return noiseGyro_; }
-  float noiseAcc() { return noiseAcc_; }
-  float gyroWalk() { return gyroWalk_; }
+  float noiseGyro() const { return noiseGyro_; }
+  float noiseAcc() const { return noiseAcc_; }
+  float gyroWalk() const { return gyroWalk_; }
   float accWalk() const { return accWalk_; }
   float imuFrequency() const { return imuFrequency_; }
   Sophus::SE3f Tbc() { return Tbc_; }
@@ -101,14 +102,15 @@ class Settings {
   float depthMapFactor() const { return depthMapFactor_; }
 
   Sophus::SE3f Tbo() { return Tbo_; }
+  bool bUseOdom() const { return bUseOdom_; };
   float noiseX() const { return NoiseX_; }
   float noiseY() const { return NoiseY_; }
   float noiseRotZ_() const { return NoiseRotZ_; }
 
   int nFeatures() const { return nFeatures_; }
   int nLevels() const { return nLevels_; }
-  float initThFAST() const { return initThFAST_; }
-  float minThFAST() const { return minThFAST_; }
+  float initThFAST() const { return (float)initThFAST_; }
+  float minThFAST() const { return (float)minThFAST_; }
   float scaleFactor() const { return scaleFactor_; }
 
   float keyFrameSize() const { return keyFrameSize_; }
@@ -214,6 +216,7 @@ class Settings {
   /*
    * WOdometry stuff
    */
+  bool bUseOdom_;
   float NoiseX_, NoiseY_, NoiseRotZ_;
   Sophus::SE3f Tbo_;
 
@@ -247,6 +250,6 @@ class Settings {
    */
   float thFarPoints_;
 };
-};  // namespace ORB_SLAM3
+}  // namespace ORB_SLAM3
 
 #endif  // ORB_SLAM3_SETTINGS_H

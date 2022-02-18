@@ -99,14 +99,14 @@ int ORBmatcher::SearchByProjection(Frame& F,
                   bestLevel2 = bestLevel;
                   bestLevel = (F.Nleft == -1)
                                   ? F.mvKeysUn[idx].octave
-                                  : (idx < F.Nleft)
+                                  : (idx < (size_t)F.Nleft)
                                         ? F.mvKeys[idx].octave
                                         : F.mvKeysRight[idx - F.Nleft].octave;
                   bestIdx = idx;
                 } else if (dist < bestDist2) {
                   bestLevel2 = (F.Nleft == -1)
                                    ? F.mvKeysUn[idx].octave
-                                   : (idx < F.Nleft)
+                                   : (idx < (size_t)F.Nleft)
                                          ? F.mvKeys[idx].octave
                                          : F.mvKeysRight[idx - F.Nleft].octave;
                   bestDist2 = dist;
@@ -286,19 +286,19 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF, Frame& F,
 
             const int dist = DescriptorDistance(dKF, dF);
 
-            if (realIdxF < F.Nleft && dist < bestDist1) {
+            if (realIdxF < (size_t)F.Nleft && dist < bestDist1) {
               bestDist2 = bestDist1;
               bestDist1 = dist;
               bestIdxF = realIdxF;
-            } else if (realIdxF < F.Nleft && dist < bestDist2) {
+            } else if (realIdxF < (size_t)F.Nleft && dist < bestDist2) {
               bestDist2 = dist;
             }
 
-            if (realIdxF >= F.Nleft && dist < bestDist1R) {
+            if (realIdxF >= (size_t)F.Nleft && dist < bestDist1R) {
               bestDist2R = bestDist1R;
               bestDist1R = dist;
               bestIdxFR = realIdxF;
-            } else if (realIdxF >= F.Nleft && dist < bestDist2R) {
+            } else if (realIdxF >= (size_t)F.Nleft && dist < bestDist2R) {
               bestDist2R = dist;
             }
           }
@@ -312,7 +312,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF, Frame& F,
             const cv::KeyPoint& kp =
                 (!pKF->mpCamera2)
                     ? pKF->mvKeysUn[realIdxKF]
-                    : (realIdxKF >= pKF->NLeft)
+                    : (realIdxKF >= (size_t)pKF->NLeft)
                           ? pKF->mvKeysRight[realIdxKF - pKF->NLeft]
                           : pKF->mvKeys[realIdxKF];
 
@@ -338,7 +338,7 @@ int ORBmatcher::SearchByBoW(KeyFrame* pKF, Frame& F,
             const cv::KeyPoint& kp =
                 (!pKF->mpCamera2)
                     ? pKF->mvKeysUn[realIdxKF]
-                    : (realIdxKF >= pKF->NLeft)
+                    : (realIdxKF >= (size_t)pKF->NLeft)
                           ? pKF->mvKeysRight[realIdxKF - pKF->NLeft]
                           : pKF->mvKeys[realIdxKF];
             if (mbCheckOrientation) {
@@ -924,10 +924,10 @@ int ORBmatcher::SearchForTriangulation(
         const cv::KeyPoint& kp1 =
             (pKF1->NLeft == -1)
                 ? pKF1->mvKeysUn[idx1]
-                : (idx1 < pKF1->NLeft) ? pKF1->mvKeys[idx1]
+                : (idx1 < (size_t)pKF1->NLeft) ? pKF1->mvKeys[idx1]
                                        : pKF1->mvKeysRight[idx1 - pKF1->NLeft];
 
-        const bool bRight1 = !(pKF1->NLeft == -1 || idx1 < pKF1->NLeft);
+        const bool bRight1 = !(pKF1->NLeft == -1 || idx1 < (size_t)pKF1->NLeft);
 
         const cv::Mat& d1 = pKF1->mDescriptors.row(idx1);
 
@@ -953,10 +953,10 @@ int ORBmatcher::SearchForTriangulation(
 
           const cv::KeyPoint& kp2 =
               (pKF2->NLeft == -1) ? pKF2->mvKeysUn[idx2]
-                                  : (idx2 < pKF2->NLeft)
+                                  : (idx2 <(size_t)pKF2->NLeft)
                                         ? pKF2->mvKeys[idx2]
                                         : pKF2->mvKeysRight[idx2 - pKF2->NLeft];
-          const bool bRight2 = !(pKF2->NLeft == -1 || idx2 < pKF2->NLeft);
+          const bool bRight2 = !(pKF2->NLeft == -1 || idx2 <(size_t)pKF2->NLeft);
 
           if (!bStereo1 && !bStereo2 && !pKF1->mpCamera2) {
             const float distex = ep(0) - kp2.pt.x;
@@ -1096,7 +1096,7 @@ int ORBmatcher::Fuse(KeyFrame* pKF, const vector<MapPoint*>& vpMapPoints,
   int count_notMP = 0, count_bad = 0, count_isinKF = 0, count_negdepth = 0,
       count_notinim = 0, count_dist = 0, count_normal = 0, count_notidx = 0,
       count_thcheck = 0;
-  for (int i = 0; i < nMPs; i++) {
+  for (size_t i = 0; i < nMPs; i++) {
     MapPoint* pMP = vpMapPoints[i];
 
     if (!pMP) {
@@ -1261,7 +1261,7 @@ int ORBmatcher::Fuse(KeyFrame* pKF, Sophus::Sim3f& Scw,
   const size_t nPoints = vpPoints.size();
 
   // For each candidate MapPoint project and match
-  for (int iMP = 0; iMP < nPoints; iMP++) {
+  for (size_t iMP = 0; iMP < nPoints; iMP++) {
     MapPoint* pMP = vpPoints[iMP];
 
     // Discard Bad MapPoints and already found
