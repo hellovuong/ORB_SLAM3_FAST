@@ -2269,7 +2269,7 @@ int Optimizer::OptimizeSim3(KeyFrame* pKF1, KeyFrame* pKF2,
   }
 
   // Recover optimized Sim3
-  auto* vSim3_recov = dynamic_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
+  auto* vSim3_recov = static_cast<g2o::VertexSim3Expmap*>(optimizer.vertex(0));
   g2oS12 = vSim3_recov->estimate();
 
   return nIn;
