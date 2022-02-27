@@ -64,7 +64,7 @@ void Atlas::CreateNewMap() {
   }
   cout << "Creation of new map with last KF id: " << mnLastInitKFidMap << endl;
 
-  mpCurrentMap = new Map(mnLastInitKFidMap);
+  mpCurrentMap = new Map(static_cast<int>(mnLastInitKFidMap));
   mpCurrentMap->SetCurrentMap();
   mspMaps.insert(mpCurrentMap);
 }
@@ -187,7 +187,7 @@ vector<Map*> Atlas::GetAllMaps() {
 
 int Atlas::CountMaps() {
   unique_lock<mutex> lock(mMutexAtlas);
-  return mspMaps.size();
+  return static_cast<int>(mspMaps.size());
 }
 
 void Atlas::clearMap() {

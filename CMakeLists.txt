@@ -10,8 +10,8 @@ option(BUILD_EXAMPLES "Build Examples " OFF)
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-deprecated -Wno-deprecated-declarations  -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-deprecated -Wno-deprecated-declarations -O3")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-unused-but-set-variable -Wno-unused-variable -Wno-deprecated -Wno-deprecated-declarations  -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-error=unused-variable -Wno-error=unused-but-set-variable -Wno-unused-but-set-variable -Wno-unused-variable -Wno-deprecated -Wno-deprecated-declarations -O3")
 #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} ")
@@ -128,7 +128,7 @@ add_library(${PROJECT_NAME} SHARED
         include/Settings.h
         src/OdomTypes.cpp include/OdomTypes.h
         src/OdomFactor.cpp include/OdomFactor.h
-        include/sophus_utilis.hpp)
+        include/sophus_utilis.hpp src/WOdometryOptimization.cpp include/WOdometryOptimization.h)
 
 add_subdirectory(Thirdparty/g2o)
 

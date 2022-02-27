@@ -352,7 +352,11 @@ void Sim3Solver::ComputeSim3(Eigen::Matrix3f& P1, Eigen::Matrix3f& P2) {
   // Step 6: Scale
 
   if (!mbFixScale) {
-    double cvnom = Converter::toCvMat(Pr1).dot(Converter::toCvMat(P3));
+    cv::Mat cvPr1, cvP3;
+    cv::eigen2cv(Pr1,cvPr1);
+    cv::eigen2cv(P3,cvP3);
+    //    double cvnom = Converter::toCvMat(Pr1).dot(Converter::toCvMat(P3));
+    double cvnom = cvPr1.dot(cvP3);
     double nom = (Pr1.array() * P3.array()).sum();
     if (abs(nom - cvnom) > 1e-3)
       std::cout << "sim3 solver: " << abs(nom - cvnom) << std::endl

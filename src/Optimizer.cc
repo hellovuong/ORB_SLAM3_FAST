@@ -508,13 +508,26 @@ void Optimizer::FullInertialBA(Map* pMap, int its, const bool bFixLocal,
           auto* eo = new EdgeWOdometry(pKFi->mpOdomPreintegrated);
           eo->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP1));
           eo->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
-          optimizer.addEdge(eo);
+//          optimizer.addEdge(eo);
 
-          //          Sophus::SE3f Twb_orig = pMap->GetOriginKF()->GetImuPose();
-          //          auto* ep = new EdgePlane(Twb_orig);
+          //          Sophus::SE3f Two_orig = pMap->GetOriginKF()->GetImuPose()
+          //          *
+          //                                  pKFi->mpOdomPreintegrated->Tbo;
+          //          Sophus::SE3f Two_orig =
+          //          Sophus::SE3f(Eigen::Quaternionf::Identity(),
+          //                                               Eigen::Vector3f::Zero());
+          //          auto* ep = new EdgePlane(Two_orig);
+          //          ep->Tbo = pKFi->mpOdomPreintegrated->Tbo.cast<double>();
           //          ep->setVertex(0,
-          //          dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
+          //          static_cast<g2o::OptimizableGraph::Vertex*>(VP2));
           //          optimizer.addEdge(ep);
+          //          Sophus::SE3f Twoi =
+          //              pKFi->GetImuPose() * pKFi->mpOdomPreintegrated->Tbo;
+          //          Sophus::SE3f T_orig_i = Two_orig.inverse() * Twoi;
+          //          std::cout << "Keyframe: " << pKFi->mnId << " "
+          //                    << T_orig_i.translation().transpose() << " "
+          //                    << T_orig_i.so3().log().transpose() <<
+          //                    std::endl;
         }
       } else
         cout << pKFi->mnId << " or " << pKFi->mPrevKF->mnId << " no imu"
@@ -791,8 +804,7 @@ int Optimizer::PoseOptimization(Frame* pFrame) {
     unique_lock<mutex> lock(MapPoint::mGlobalMutex);
 
     //    tbb::parallel_for(
-    //        tbb::blocked_range<size_t>(0, N), [&](tbb::blocked_range<size_t>
-    //        rN) {
+    //        tbb::blocked_range<int>(0, N), [&](tbb::blocked_range<int> rN) {
     for (int i = 0; i < N; i++) {
       MapPoint* pMP = pFrame->mvpMapPoints[i];
       if (pMP) {
@@ -2536,11 +2548,16 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF, bool* pbStopFlag, Map* pMap,
         veo[i]->setVertex(0, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP1));
         veo[i]->setVertex(1, dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
         optimizer.addEdge(veo[i]);
-        //                Sophus::SE3f Twb_orig =
-        //                pCurrentMap->GetOriginKF()->GetImuPose();
-        //        auto* ep = new EdgePlane(Twb_orig);
+        //        Sophus::SE3f Two_orig =
+        //            pMap->GetOriginKF()->GetImuPose() *
+        //            pKFi->mpOdomPreintegrated->Tbo;
+        //        Sophus::SE3f Two_orig =
+        //        Sophus::SE3f(Eigen::Quaternionf::Identity(),
+        //                                             Eigen::Vector3f::Zero());
+        //        auto* ep = new EdgePlane(Two_orig);
+        //        ep->Tbo = pKFi->mpOdomPreintegrated->Tbo.cast<double>();
         //        ep->setVertex(0,
-        //        dynamic_cast<g2o::OptimizableGraph::Vertex*>(VP2));
+        //        static_cast<g2o::OptimizableGraph::Vertex*>(VP2));
         //        optimizer.addEdge(ep);
       }
     } else

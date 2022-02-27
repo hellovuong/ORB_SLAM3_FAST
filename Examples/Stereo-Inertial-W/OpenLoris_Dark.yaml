@@ -114,9 +114,9 @@ ORBextractor.nLevels: 8
 # ORB Extractor: Fast threshold
 # Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
 # Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
-# You can lower these values if your images have low contrast			
-ORBextractor.iniThFAST: 20
-ORBextractor.minThFAST: 7
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 40  #OpenLoris-Corridor 2-3-4
+ORBextractor.minThFAST: 20  #OpenLoris-Corridor 2-3-4
 
 #--------------------------------------------------------------------------------------------
 # Viewer Parameters

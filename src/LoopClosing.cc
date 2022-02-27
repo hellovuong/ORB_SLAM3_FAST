@@ -2127,8 +2127,6 @@ void LoopClosing::MergeLocal2() {
 
   // Release Local Mapping.
   mpLocalMapper->Release();
-
-  return;
 }
 
 void LoopClosing::CheckObservations(set<KeyFrame*>& spKFsMap1,
@@ -2385,9 +2383,7 @@ void LoopClosing::RunGlobalBundleAdjustment(Map* pActiveMap,
         Sophus::SE3f Twc = pKF->GetPoseInverse();
         // cout << "Twc: " << Twc << endl;
         // cout << "GBA: Correct KeyFrames" << endl;
-        for (set<KeyFrame*>::const_iterator sit = sChilds.begin();
-             sit != sChilds.end(); sit++) {
-          KeyFrame* pChild = *sit;
+        for (auto pChild : sChilds) {
           if (!pChild || pChild->isBad()) continue;
 
           if (pChild->mnBAGlobalForKF != nLoopKF) {

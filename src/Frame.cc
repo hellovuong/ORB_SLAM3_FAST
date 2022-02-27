@@ -230,7 +230,7 @@ Frame::Frame(const cv::Mat& imLeft, const cv::Mat& imRight,
           .count();
 #endif
 
-  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(NULL));
+  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(nullptr));
   mvbOutlier = vector<bool>(N, false);
   mmProjectPoints.clear();
   mmMatchedInImage.clear();
@@ -341,7 +341,7 @@ Frame::Frame(const cv::Mat& imGray, const cv::Mat& imDepth,
 
   ComputeStereoFromRGBD(imDepth);
 
-  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(NULL));
+  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(nullptr));
 
   mmProjectPoints.clear();
   mmMatchedInImage.clear();
@@ -455,7 +455,7 @@ Frame::Frame(const cv::Mat& imGray, const double& timeStamp,
   mvDepth = vector<float>(N, -1);
   mnCloseMPs = 0;
 
-  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(NULL));
+  mvpMapPoints = vector<MapPoint*>(N, static_cast<MapPoint*>(nullptr));
 
   mmProjectPoints.clear();  // = map<long unsigned int, cv::Point2f>(N,
                             // static_cast<cv::Point2f>(NULL));
@@ -980,7 +980,7 @@ void Frame::ComputeStereoMatches() {
                        .rowRange(scaledvL - w, scaledvL + w + 1)
                        .colRange(scaleduL - w, scaleduL + w + 1);
 
-      int bestDist = INT_MAX;
+      int bestDist_ = INT_MAX;
       int bestincR = 0;
       const int L = 5;
       vector<float> vDists;
@@ -999,8 +999,8 @@ void Frame::ComputeStereoMatches() {
                 .colRange(scaleduR0 + incR - w, scaleduR0 + incR + w + 1);
 
         float dist = cv::norm(IL, IR, cv::NORM_L1);
-        if (dist < bestDist) {
-          bestDist = dist;
+        if (dist < bestDist_) {
+          bestDist_ = dist;
           bestincR = incR;
         }
 
@@ -1032,7 +1032,7 @@ void Frame::ComputeStereoMatches() {
         }
         mvDepth[iL] = mbf / disparity;
         mvuRight[iL] = bestuR;
-        vDistIdx.push_back(pair<int, int>(bestDist, iL));
+        vDistIdx.push_back(pair<int, int>(bestDist_, iL));
       }
     }
   }

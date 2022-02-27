@@ -26,7 +26,6 @@
 
 #include <chrono>
 #include <ctime>
-#include <filesystem>
 #include <iostream>
 #include <opencv4/opencv2/core/types.hpp>
 
@@ -79,17 +78,17 @@ bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
 int main(int argc, char** argv) {
   if (argc < 4) {
     cerr << endl
-         << "Usage: ./stereo_inertial_zed2 path_to_vocabulary "
-            "path_to_settings path_to_sequence_folder_1 "
-            "(path_to_image_folder_2 ... "
-            "path_to_image_folder_N) "
+         << "Usage: ./stereo_inertial_zed2 path_to_vocabulary path_to_settings"
+            " path_to_sequence_folder_1 path_to_odom_file_1 "
+            "(path_to_image_folder_2 path_to_odom_file_2 ... "
+            "path_to_image_folder_N path_to_odom_file_N) (name_sequence)"
          << endl;
     return EXIT_FAILURE;
   }
 
   const int num_seq = ((argc - 3) / 2);
   cout << "num_seq = " << num_seq << endl;
-  bool bFileName = false;
+  bool bFileName = (((argc - 3) % 2) == 1);
   string file_name;
   if (bFileName) {
     file_name = string(argv[argc - 1]);
@@ -135,10 +134,8 @@ int main(int argc, char** argv) {
     cout << "Loading data for sequence " << seq << "...\n";
 
     string pathSeq(argv[(2 * seq) + 3]);
-
+    string pathOdom(argv[(2 * seq) + 4]);
     string pathImu = pathSeq + "/t265_imu.txt";
-
-    string pathOdom = pathSeq + "/odom_200.txt";
 
     cout << "Loading Images for sequence " << seq << "...\n";
     bool bLoadImages = LoadImages(pathSeq, vstrImageLeft[seq],
@@ -200,7 +197,27 @@ int main(int argc, char** argv) {
   // Vector for tracking time statistics
   vector<double> vTimesTrack;
   vTimesTrack.resize(tot_images);
+  // clang-format off
+  Eigen::Matrix4d gyro_calib,acc_calib;
 
+  gyro_calib <<     0.99567949771881104f, 0.00000000000000000f, 0.000000f,            0.0019203490810468793f,
+                    0.000000f,            0.99803745746612549f, 0.0f,                 0.0021561817266047001f,
+                    0.000000f,            0.000000f,            0.99269545078277588f, 0.0011997447581961751f,
+                    0.000000f,            0.000000f,            0.000000f,            1.000000f;
+
+  acc_calib <<      1.0138926506042480f,  0.000000f,            0.000000f,            -0.051095332950353622f,
+                    0.0f,                 1.0174480676651001f,  0.000000f,            0.27321520447731018f,
+                    0.000000f,            0.000000f,            1.0285693407058716f,  0.094960018992424011f,
+                    0.000000f,            0.000000f,            0.000000f,            1.000000f;
+  // clang-format on
+  Sophus::SE3f spGyroCalib(
+      Eigen::Quaternionf(gyro_calib.block<3, 3>(0, 0).cast<float>())
+          .normalized(),
+      gyro_calib.block<3, 1>(0, 3).cast<float>());
+  Sophus::SE3f spAccCalib(
+      Eigen::Quaternionf(acc_calib.block<3, 3>(0, 0).cast<float>())
+          .normalized(),
+      acc_calib.block<3, 1>(0, 3).cast<float>());
   cout << endl << "-------" << endl;
   cout.precision(17);
   // Create SLAM system. It initializes all system threads and gets ready to
@@ -215,11 +232,15 @@ int main(int argc, char** argv) {
     // Seq loop
     vector<ORB_SLAM3::IMU::Point> vImuMeas;
     vector<ORB_SLAM3::ODOM::Meas> vOdomMeas;
+    cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE(3.0, cv::Size(8, 8));
     int proccIm = 0;
     for (int ni = first_image[seq]; ni < vnImages[seq]; ni++, proccIm++) {
       // Read left and right images from file
       imLeft = cv::imread(vstrImageLeft[seq][ni], cv::IMREAD_UNCHANGED);
       imRight = cv::imread(vstrImageRight[seq][ni], cv::IMREAD_UNCHANGED);
+      // clahe
+      clahe->apply(imLeft, imLeft);
+      clahe->apply(imRight, imRight);
 
       if (imLeft.empty()) {
         cerr << endl
@@ -257,7 +278,15 @@ int main(int argc, char** argv) {
           first_odom[seq]++;
         }
       }
+      // Apply calibration on IMU for T265 Camera
+      Eigen::Vector4d imu_gyro, imu_acc;
 
+      for (auto& imudata : vImuMeas) {
+        imudata.a =
+            spAccCalib.rotationMatrix() * imudata.a + spAccCalib.translation();
+        imudata.w = spGyroCalib.rotationMatrix() * imudata.w +
+                    spGyroCalib.translation();
+      }
 #ifdef COMPILEDWITHC11
       std::chrono::steady_clock::time_point t1 =
           std::chrono::steady_clock::now();
@@ -298,7 +327,7 @@ int main(int argc, char** argv) {
 
       if (ttrack < T) usleep((unsigned int)((T - ttrack) * 1e6));
     }
-    std::cout << "Finish seq " << std::endl;
+    std::cout << "Finish seq " << seq << std::endl;
     if (seq < num_seq - 1) {
       cout << "Changing the dataset" << endl;
 
@@ -312,10 +341,8 @@ int main(int argc, char** argv) {
   // Save camera trajectory
   if (bFileName) {
     std::cout << "Saved trajectory " << std::endl;
-    const string kf_file = "kf_" + string(argv[argc - 1]) + ".txt";
     const string f_file = "f_" + string(argv[argc - 1]) + ".txt";
-    SLAM.SaveTrajectoryEuRoC(f_file);
-    SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
+    SLAM.SaveTrajectoryUZH(f_file);
   } else {
     std::cout << "Saved trajectory " << std::endl;
     SLAM.SaveTrajectoryUZH("CameraTrajectory.txt");
@@ -435,7 +462,7 @@ bool LoadOdom(const string& strOdomPath, vector<double>& vTimeStamps,
     if (!s.empty()) {
       stringstream ss;
       ss << s;
-      ss >> data[0];  // time
+      ss >> data[0];  // timestamp
       ss >> data[1];  // trans_x
       ss >> data[2];  // trans_y
       ss >> data[3];  // trans_z

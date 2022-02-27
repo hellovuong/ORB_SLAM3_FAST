@@ -28,6 +28,8 @@
 #include "LoopClosing.h"
 #include "Settings.h"
 #include "Tracking.h"
+#include "WOdometryOptimization.h"
+#include "OdomFactor.h"
 
 #include <mutex>
 #define REGISTER_TIMES
@@ -42,7 +44,7 @@ class Atlas;
 class LocalMapping {
  public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
+  LocalMapping(System* pSys, Atlas* pAtlas, const bool bMonocular,
                bool bInertial, const string& _strSeqName = std::string());
 
   void SetLoopCloser(LoopClosing* pLoopCloser);
@@ -184,6 +186,11 @@ class LocalMapping {
 
   bool bInitializing;
 
+  void OnlineCalibration();
+  void InitializePlanarConstraint();
+  bool mbPlanarInit;
+  PlanarConstraint* mpPlanarConstraint;
+
   Eigen::MatrixXd infoInertial;
   int mNumLM;
   int mNumKFCulling;
@@ -192,6 +199,8 @@ class LocalMapping {
 
   int countRefinement{};
 
+  // Number of KFs since last calibration
+  size_t mnLastExtCalib;
   // DEBUG
   ofstream f_lm;
 };

@@ -1,0 +1,109 @@
+%YAML:1.0
+File.version: "1.0"
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+Camera.type: "KannalaBrandt8"
+#From kalibr
+Camera1.fx: 278.66723066149086
+Camera1.fy: 278.48991409740296
+Camera1.cx: 319.75221200593535
+Camera1.cy: 241.96858910358173
+
+# Kannala-Brandt distortion parameters
+Camera1.k1: -0.013721808247486035
+Camera1.k2: 0.020727425669427896
+Camera1.k3: -0.012786476702685545
+Camera1.k4: 0.0025242267320687625
+
+# Camera2
+Camera2.fx: 277.61640629770613
+Camera2.fy: 277.63749695723294
+Camera2.cx: 314.8944703346039
+Camera2.cy: 236.04310050462587
+
+# Kannala-Brandt distortion parameters
+Camera2.k1: -0.008456929295619607
+Camera2.k2: 0.011407590938612062
+Camera2.k3: -0.006951788325762078
+Camera2.k4: 0.0015368127092821786
+
+# Lapping area between images
+Camera1.overlappingBegin: 0
+Camera1.overlappingEnd: 640
+
+Camera2.overlappingBegin: 0
+Camera2.overlappingEnd: 640
+
+Camera.width: 640
+Camera.height: 480
+
+# Camera frames per second 
+Camera.fps: 30
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 35.0 # 35
+
+Stereo.T_c1_c2: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data:    [0.9998053017199788, 0.011197738450911484, 0.01624713224548414, -0.07961594300469246,
+             -0.011147758116324, 0.9999328574031386, -0.0031635699090552883, 0.0007443452072558462,
+             -0.016281466199246444, 0.00298183486707869, 0.9998630018753686, 0.0004425529195268342,
+             0.0, 0.0, 0.0, 1.0]
+
+IMU.T_b_c1: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+   data:  [-0.028228787368606456, -0.999601488301944, 1.2175294828553618e-05, 0.02172388268966517,
+           0.014401251861751119, -0.00041887083271471837, -0.9998962088597202, -6.605455433829172e-05,
+           0.999497743623523, -0.028225682131089447, 0.014407337010089172, -0.00048817563004522853,
+           0.0, 0.0, 0.0, 1.0]
+
+IMU.NoiseGyro: 0.05
+IMU.NoiseAcc:  0.1
+IMU.GyroWalk:  4.0e-05
+IMU.AccWalk:   0.002
+IMU.Frequency: 200.0
+#System.thFarPoints: 20.0  # In TUM outdoors, we ignore points too far away
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1200
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
+
+

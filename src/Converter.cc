@@ -32,43 +32,14 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat& Descriptors) {
   return vDesc;
 }
 
-cv::Mat Converter::toCvMat(const Eigen::Matrix<float, 3, 4>& m) {
-  cv::Mat cvMat(3, 4, CV_32F);
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 4; j++) cvMat.at<float>(i, j) = m(i, j);
-
-  return cvMat.clone();
-}
-
-cv::Mat Converter::toCvMat(const Eigen::Matrix3f& m) {
-  cv::Mat cvMat(3, 3, CV_32F);
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++) cvMat.at<float>(i, j) = m(i, j);
-
-  return cvMat.clone();
-}
-
-cv::Mat Converter::toCvMat(const Eigen::Matrix<float, 3, 1>& m) {
-  cv::Mat cvMat(3, 1, CV_32F);
-  for (int i = 0; i < 3; i++) cvMat.at<float>(i) = m(i);
-
-  return cvMat.clone();
-}
-
-Eigen::Matrix<float, 3, 1> Converter::toVector3f(const cv::Mat& cvVector) {
-  Eigen::Matrix<float, 3, 1> v;
-  v << cvVector.at<float>(0), cvVector.at<float>(1), cvVector.at<float>(2);
-
-  return v;
-}
-
 Eigen::Matrix<float, 3, 3> Converter::toMatrix3f(const cv::Mat& cvMat3) {
   Eigen::Matrix<float, 3, 3> M;
-
-  M << cvMat3.at<float>(0, 0), cvMat3.at<float>(0, 1), cvMat3.at<float>(0, 2),
-      cvMat3.at<float>(1, 0), cvMat3.at<float>(1, 1), cvMat3.at<float>(1, 2),
-      cvMat3.at<float>(2, 0), cvMat3.at<float>(2, 1), cvMat3.at<float>(2, 2);
-
+  // clang-format off
+//  M << cvMat3.at<float>(0, 0), cvMat3.at<float>(0, 1), cvMat3.at<float>(0, 2),
+//      cvMat3.at<float>(1, 0), cvMat3.at<float>(1, 1), cvMat3.at<float>(1, 2),
+//      cvMat3.at<float>(2, 0), cvMat3.at<float>(2, 1), cvMat3.at<float>(2, 2);
+  // clang-format on
+  cv::cv2eigen(cvMat3, M);
   return M;
 }
 
@@ -84,6 +55,52 @@ Sophus::Sim3f Converter::toSophus(const g2o::Sim3& S) {
   return Sophus::Sim3f(
       Sophus::RxSO3d((float)S.scale(), S.rotation().matrix()).cast<float>(),
       S.translation().cast<float>());
+}
+//template <typename T>
+Eigen::Quaternion<float> Converter::QuaternionAvg(
+    std::vector<Eigen::Quaternion<float>>& vQuaternions) {
+  if (vQuaternions.empty()) {
+    std::cerr << "Try to avg an empty vector return Identity" << std::endl;
+    return Eigen::Quaternion<float>::Identity();
+  }
+  // first build a 4x4 matrix which is the elementwise sum of the product of
+  // each quaternion with itself
+  Eigen::Matrix<float, 4, 4> A = Eigen::Matrix<float, 4, 4>::Zero();
+
+  for (auto quaternion : vQuaternions) {
+    A = A.eval() +
+        quaternion.coeffs() * quaternion.coeffs().transpose();
+  }
+
+  // normalise with the number of quaternions
+  A /= vQuaternions.size();
+
+  // Compute the SVD of this 4x4 matrix
+  Eigen::JacobiSVD<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic>> svd(
+      A, Eigen::ComputeThinU | Eigen::ComputeThinV);
+
+  Eigen::Matrix<float, Eigen::Dynamic, 1> singularValues = svd.singularValues();
+  Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> U = svd.matrixU();
+
+  // find the eigen vector corresponding to the largest eigen value
+  int largestEigenValueIndex = 0;
+  float largestEigenValue;
+  bool first = true;
+
+  for (auto i = 0; i < singularValues.rows(); ++i) {
+    if (first) {
+      largestEigenValue = singularValues(i);
+      largestEigenValueIndex = i;
+      first = false;
+    } else if (singularValues(i) > largestEigenValue) {
+      largestEigenValue = singularValues(i);
+      largestEigenValueIndex = i;
+    }
+  }
+  Eigen::Quaternion<float> QuaternionAvg(
+      U(3, largestEigenValueIndex), U(0, largestEigenValueIndex),
+      U(1, largestEigenValueIndex), U(2, largestEigenValueIndex));
+  return QuaternionAvg;
 }
 
 }  // namespace ORB_SLAM3

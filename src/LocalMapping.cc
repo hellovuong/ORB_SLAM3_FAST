@@ -32,7 +32,7 @@
 
 namespace ORB_SLAM3 {
 
-LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
+LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const bool bMonocular,
                            bool bInertial, const string& _strSeqName)
     : mpSystem(pSys),
       mbMonocular(bMonocular),
@@ -48,7 +48,10 @@ LocalMapping::LocalMapping(System* pSys, Atlas* pAtlas, const float bMonocular,
       mbNotStop(false),
       mbAcceptKeyFrames(true),
       bInitializing(false),
-      infoInertial(Eigen::MatrixXd::Zero(9, 9)) {
+      mbPlanarInit(false),
+      mpPlanarConstraint(nullptr),
+      infoInertial(Eigen::MatrixXd::Zero(9, 9)),
+      mnLastExtCalib(0) {
   mnMatchesInliers = 0;
 
   mbBadImu = false;
@@ -153,24 +156,27 @@ void LocalMapping::Run() {
             if (dist > 0.05)
               mTinit += mpCurrentKeyFrame->mTimeStamp -
                         mpCurrentKeyFrame->mPrevKF->mTimeStamp;
-            if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2()) {
-              if ((mTinit < 10.f) && (dist < 0.02)) {
-                cout << "Not enough motion for initializing. Reseting..."
-                     << endl;
-                //                unique_lock<mutex> lock(mMutexReset);
-                //                mbResetRequestedActiveMap = true;
-                //                mpMapToReset = mpCurrentKeyFrame->GetMap();
-                //                mbBadImu = true;
-              }
+            if (!mpCurrentKeyFrame->GetMap()->GetIniertialBA2() &&
+                (mTinit < 10.f) && (dist < 0.02)) {
+              cout << "Not enough motion for initializing. Reseting..." << endl;
+              //                unique_lock<mutex> lock(mMutexReset);
+              //                mbResetRequestedActiveMap = true;
+              //                mpMapToReset = mpCurrentKeyFrame->GetMap();
+              //                mbBadImu = true;
             }
-
+            // Initialize Planar Motion constrains
+            if (!mbPlanarInit) InitializePlanarConstraint();
             bool bLarge =
                 ((mpTracker->GetMatchesInliers() > 75) && mbMonocular) ||
                 ((mpTracker->GetMatchesInliers() > 100) && !mbMonocular);
-            Optimizer::LocalInertialBA(
-                mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),
-                num_FixedKF_BA, num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
-                !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+//            Optimizer::LocalInertialBA(
+//                mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),
+//                num_FixedKF_BA, num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
+//                !mpCurrentKeyFrame->GetMap()->GetIniertialBA2());
+            WOdometryOptimization::LocalInertialBANew(
+                                mpCurrentKeyFrame, &mbAbortBA, mpCurrentKeyFrame->GetMap(),
+                                num_FixedKF_BA, num_OptKF_BA, num_MPs_BA, num_edges_BA, bLarge,
+                                !mpCurrentKeyFrame->GetMap()->GetIniertialBA2(),mpPlanarConstraint);
             b_doneLBA = true;
           } else {
             Optimizer::LocalBundleAdjustment(
@@ -223,6 +229,15 @@ void LocalMapping::Run() {
                                .count();
         vdKFCulling_ms.push_back(timeKFCulling_ms);
 #endif
+        // Extrinsic calibration
+        if (mnLastExtCalib < 20)
+          mnLastExtCalib++;
+        else {
+          // Online calibration
+          //          OnlineCalibration();
+          mnLastExtCalib = 0;
+          // Update calibration in Tracking
+        }
 
         if ((mTinit < 50.0f) && mbInertial) {
           if (mpCurrentKeyFrame->GetMap()->isImuInitialized() &&
@@ -266,7 +281,7 @@ void LocalMapping::Run() {
       vdKFCullingSync_ms.push_back(timeKFCulling_ms);
 #endif
 
-      mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
+//      mpLoopCloser->InsertKeyFrame(mpCurrentKeyFrame);
 
 #ifdef REGISTER_TIMES
       std::chrono::steady_clock::time_point time_EndLocalMap =
@@ -693,10 +708,7 @@ void LocalMapping::SearchInNeighbors() {
   const vector<KeyFrame*> vpNeighKFs =
       mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
   vector<KeyFrame*> vpTargetKFs;
-  for (vector<KeyFrame*>::const_iterator vit = vpNeighKFs.begin(),
-                                         vend = vpNeighKFs.end();
-       vit != vend; vit++) {
-    KeyFrame* pKFi = *vit;
+  for (auto pKFi : vpNeighKFs) {
     if (pKFi->isBad() || pKFi->mnFuseTargetForKF == mpCurrentKeyFrame->mnId)
       continue;
     vpTargetKFs.push_back(pKFi);
@@ -708,10 +720,7 @@ void LocalMapping::SearchInNeighbors() {
   for (int i = 0, imax = vpTargetKFs.size(); i < imax; i++) {
     const vector<KeyFrame*> vpSecondNeighKFs =
         vpTargetKFs[i]->GetBestCovisibilityKeyFrames(20);
-    for (vector<KeyFrame*>::const_iterator vit2 = vpSecondNeighKFs.begin(),
-                                           vend2 = vpSecondNeighKFs.end();
-         vit2 != vend2; vit2++) {
-      KeyFrame* pKFi2 = *vit2;
+    for (auto pKFi2 : vpSecondNeighKFs) {
       if (pKFi2->isBad() ||
           pKFi2->mnFuseTargetForKF == mpCurrentKeyFrame->mnId ||
           pKFi2->mnId == mpCurrentKeyFrame->mnId)
@@ -865,11 +874,11 @@ void LocalMapping::KeyFrameCulling() {
   // Compoute last KF from optimizable window:
   unsigned long last_ID = 0;
   if (mbInertial) {
-    int count = 0;
+    int count_ = 0;
     KeyFrame* aux_KF = mpCurrentKeyFrame;
-    while (count < Nd && aux_KF->mPrevKF) {
+    while (count_ < Nd && aux_KF->mPrevKF) {
       aux_KF = aux_KF->mPrevKF;
-      count++;
+      count_++;
     }
     last_ID = aux_KF->mnId;
   }
@@ -900,7 +909,7 @@ void LocalMapping::KeyFrameCulling() {
                                         : pKF->mvKeysRight[i].octave;
             const map<KeyFrame*, tuple<int, int>> observations =
                 pMP->GetObservations();
-            int nObs = 0;
+            int nObs_ = 0;
             for (const auto& observation : observations) {
               KeyFrame* pKFi = observation.first;
               if (pKFi == pKF) continue;
@@ -923,11 +932,11 @@ void LocalMapping::KeyFrameCulling() {
               }
 
               if (scaleLeveli <= scaleLevel + 1) {
-                nObs++;
-                if (nObs > thObs) break;
+                nObs_++;
+                if (nObs_ > thObs) break;
               }
             }
-            if (nObs > thObs) {
+            if (nObs_ > thObs) {
               nRedundantObservations++;
             }
           }
@@ -1202,16 +1211,22 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
     mpTracker->t0IMU = mpTracker->mCurrentFrame.mTimeStamp;
     mpCurrentKeyFrame->bImu = true;
   }
-
   std::chrono::steady_clock::time_point t4 = std::chrono::steady_clock::now();
   if (bFIBA) {
     if (priorA != 0.f)
-      Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false,
-                                mpCurrentKeyFrame->mnId, nullptr, true, priorG,
-                                priorA);
+            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 300, false,
+                                      mpCurrentKeyFrame->mnId, nullptr, true,
+                                      priorG, priorA);
+//      WOdometryOptimization::FullInertialBANew(
+//          mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId,
+//          nullptr, true, priorG, priorA, nullptr, nullptr, nullptr);
     else
-      Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 100, false,
-                                mpCurrentKeyFrame->mnId, nullptr, false);
+            Optimizer::FullInertialBA(mpAtlas->GetCurrentMap(), 300, false,
+                                      mpCurrentKeyFrame->mnId, nullptr,
+                                      false);
+//      WOdometryOptimization::FullInertialBANew(
+//          mpAtlas->GetCurrentMap(), 100, false, mpCurrentKeyFrame->mnId,
+//          nullptr, false, 1e2, 1e6, nullptr, nullptr, nullptr);
   }
 
   std::chrono::steady_clock::time_point t5 = std::chrono::steady_clock::now();
@@ -1237,15 +1252,15 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
       mpAtlas->GetCurrentMap()->mvpKeyFrameOrigins.end());
 
   while (!lpKFtoCheck.empty()) {
-    KeyFrame* pKF = lpKFtoCheck.front();
-    const set<KeyFrame*> sChilds = pKF->GetChilds();
-    Sophus::SE3f Twc = pKF->GetPoseInverse();
+    KeyFrame* pKF_ = lpKFtoCheck.front();
+    const set<KeyFrame*> sChilds = pKF_->GetChilds();
+    Sophus::SE3f Twc = pKF_->GetPoseInverse();
     for (auto pChild : sChilds) {
       if (!pChild || pChild->isBad()) continue;
 
       if (pChild->mnBAGlobalForKF != GBAid) {
         Sophus::SE3f Tchildc = pChild->GetPose() * Twc;
-        pChild->mTcwGBA = Tchildc * pKF->mTcwGBA;
+        pChild->mTcwGBA = Tchildc * pKF_->mTcwGBA;
 
         Sophus::SO3f Rcor =
             pChild->mTcwGBA.so3().inverse() * pChild->GetPose().so3();
@@ -1262,15 +1277,15 @@ void LocalMapping::InitializeIMU(float priorG, float priorA, bool bFIBA) {
       lpKFtoCheck.push_back(pChild);
     }
 
-    pKF->mTcwBefGBA = pKF->GetPose();
-    pKF->SetPose(pKF->mTcwGBA);
+    pKF_->mTcwBefGBA = pKF_->GetPose();
+    pKF_->SetPose(pKF_->mTcwGBA);
 
-    if (pKF->bImu) {
-      pKF->mVwbBefGBA = pKF->GetVelocity();
-      pKF->SetVelocity(pKF->mVwbGBA);
-      pKF->SetNewBias(pKF->mBiasGBA);
+    if (pKF_->bImu) {
+      pKF_->mVwbBefGBA = pKF_->GetVelocity();
+      pKF_->SetVelocity(pKF_->mVwbGBA);
+      pKF_->SetNewBias(pKF_->mBiasGBA);
     } else {
-      cout << "KF " << pKF->mnId << " not set to inertial!! \n";
+      cout << "KF " << pKF_->mnId << " not set to inertial!! \n";
     }
 
     lpKFtoCheck.pop_front();
@@ -1389,5 +1404,55 @@ double LocalMapping::GetCurrKFTime() {
 }
 
 KeyFrame* LocalMapping::GetCurrKF() { return mpCurrentKeyFrame; }
+void LocalMapping::OnlineCalibration() {
+  // Retrieve all keyframes in temporal order
+  vector<KeyFrame*> vpKFs;
+  KeyFrame* pKF = mpCurrentKeyFrame;
+  size_t n = 0;
+  while (pKF->mPrevKF && n < 20) {
+    vpKFs.push_back(pKF);
+    pKF = pKF->mPrevKF;
+    n++;
+  }
+  Sophus::SE3f Tbo = mpCurrentKeyFrame->mpOdomPreintegrated->Tbo;
+  WOdometryOptimization::OnlineExtrinsic(vpKFs, Tbo);
+  mpTracker->UpdateTbo(Tbo);
+}
+void LocalMapping::InitializePlanarConstraint() {
+  size_t nMinKF = 10;
+  if (mbResetRequested || mpAtlas->KeyFramesInMap() < nMinKF || mbPlanarInit)
+    return;
+  delete mpPlanarConstraint;
 
+  // Retrieve all keyframe in temporal order
+  list<KeyFrame*> lpKF;
+  KeyFrame* pKF = mpCurrentKeyFrame;
+  while (pKF->mPrevKF) {
+    lpKF.push_front(pKF);
+    pKF = pKF->mPrevKF;
+  }
+  lpKF.push_front(pKF);
+  vector<KeyFrame*> vpKF(lpKF.begin(), lpKF.end());
+
+  if (vpKF.size() < nMinKF) return;
+
+  while (CheckNewKeyFrames()) {
+    ProcessNewKeyFrame();
+    vpKF.push_back(mpCurrentKeyFrame);
+    lpKF.push_back(mpCurrentKeyFrame);
+  }
+
+  vector<Sophus::SE3f> vTwo;
+  vTwo.resize(vpKF.size());
+  Sophus::SE3f Tbo = vpKF[1]->mpOdomPreintegrated->Tbo;
+  for (size_t i = 0; i < vpKF.size(); i++) {
+    vTwo[i] = vpKF[i]->GetImuPose() * Tbo;
+  }
+
+  mpPlanarConstraint = new PlanarConstraint(vTwo);
+
+  mpTracker->SetPlanarConstraints(mpPlanarConstraint);
+
+  mbPlanarInit = true;
+}
 }  // namespace ORB_SLAM3

@@ -38,12 +38,18 @@ class Converter {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   static std::vector<cv::Mat> toDescriptorVector(const cv::Mat& Descriptors);
 
-  static cv::Mat toCvMat(const Eigen::Matrix<float, 3, 4>& m);
-  static cv::Mat toCvMat(const Eigen::Matrix<float, 3, 1>& m);
-  static cv::Mat toCvMat(const Eigen::Matrix<float, 3, 3>& m);
-
-  static Eigen::Matrix<float, 3, 1> toVector3f(const cv::Mat& cvVector);
   static Eigen::Matrix<float, 3, 3> toMatrix3f(const cv::Mat& cvMat3);
+
+  /**
+   * \brief Method to find the average of a set of rotation quaternions using
+   *Singular Value Decomposition
+   *
+   * The algorithm used is described here:
+   * https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20070017872.pdf
+   * @param vQuaternions: set of consicutive Quaternoins
+   **/
+  static Eigen::Quaternion<float> QuaternionAvg(
+      std::vector<Eigen::Quaternion<float>>& vQuaternions);
 
   // TODO: Sophus migration, to be deleted in the future
   static Sophus::SE3<float> toSophus(const cv::Mat& T);

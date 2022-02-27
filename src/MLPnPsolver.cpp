@@ -185,8 +185,12 @@ bool MLPnPsolver::iterate(int nIterations, bool& bNoMore,
         Rcw.convertTo(Rcw, CV_32F);
         tcw.convertTo(tcw, CV_32F);
         mBestTcw.setIdentity();
-        mBestTcw.block<3, 3>(0, 0) = Converter::toMatrix3f(Rcw);
-        mBestTcw.block<3, 1>(0, 3) = Converter::toVector3f(tcw);
+        Eigen::Matrix3f Rcw_;
+        cv2eigen(Rcw, Rcw_);
+        mBestTcw.block<3, 3>(0, 0) = Rcw_;  // Converter::toMatrix3f(Rcw);
+        Eigen::Vector3f tcw_;
+        cv2eigen(tcw, tcw_);
+        mBestTcw.block<3, 1>(0, 3) = tcw_;
 
         Eigen::Matrix<double, 3, 3, Eigen::RowMajor> eigRcw(mRi[0]);
         Eigen::Vector3d eigtcw(mti);
@@ -333,9 +337,12 @@ bool MLPnPsolver::Refine() {
     Rcw.convertTo(Rcw, CV_32F);
     tcw.convertTo(tcw, CV_32F);
     mRefinedTcw.setIdentity();
-
-    mRefinedTcw.block<3, 3>(0, 0) = Converter::toMatrix3f(Rcw);
-    mRefinedTcw.block<3, 1>(0, 3) = Converter::toVector3f(tcw);
+    Eigen::Matrix3f Rcw_;
+    cv2eigen(Rcw, Rcw_);
+    mRefinedTcw.block<3, 3>(0, 0) = Rcw_;  // Converter::toMatrix3f(Rcw);
+    Eigen::Vector3f tcw_;
+    cv2eigen(tcw, tcw_);
+    mRefinedTcw.block<3, 1>(0, 3) = tcw_;  // Converter::toVector3f(tcw);
 
     Eigen::Matrix<double, 3, 3, Eigen::RowMajor> eigRcw(mRi[0]);
     Eigen::Vector3d eigtcw(mti);
@@ -575,15 +582,15 @@ void MLPnPsolver::computePose(const bearingVectors_t& f, const points_t& p,
     for (int i = 0; i < 4; ++i) {
       point_t reproPt;
       double norms = 0.0;
-      for (int p = 0; p < 6; ++p) {
+      for (int p_ = 0; p_ < 6; ++p_) {
         reproPt =
-            Ts[i].block<3, 3>(0, 0) * points3v[p] + Ts[i].block<3, 1>(0, 3);
+            Ts[i].block<3, 3>(0, 0) * points3v[p_] + Ts[i].block<3, 1>(0, 3);
         reproPt = reproPt / reproPt.norm();
-        norms += (1.0 - reproPt.transpose() * f[indices[p]]);
+        norms += (1.0 - reproPt.transpose() * f[indices[p_]]);
       }
       normVal[i] = norms;
     }
-    std::vector<double>::iterator findMinRepro =
+    auto findMinRepro =
         std::min_element(std::begin(normVal), std::end(normVal));
     int idx = std::distance(std::begin(normVal), findMinRepro);
     Rout = Ts[idx].block<3, 3>(0, 0);
@@ -624,11 +631,11 @@ void MLPnPsolver::computePose(const bearingVectors_t& f, const points_t& p,
       else
         Ts[s].block<3, 1>(0, 3) = -tout;
       Ts[s] = Ts[s].inverse().eval();
-      for (int p = 0; p < 6; ++p) {
+      for (int p_ = 0; p_ < 6; ++p_) {
         bearingVector_t v =
-            Ts[s].block<3, 3>(0, 0) * points3v[p] + Ts[s].block<3, 1>(0, 3);
+            Ts[s].block<3, 3>(0, 0) * points3v[p_] + Ts[s].block<3, 1>(0, 3);
         v = v / v.norm();
-        error[s] += (1.0 - v.transpose() * f[indices[p]]);
+        error[s] += (1.0 - v.transpose() * f[indices[p_]]);
       }
     }
     if (error[0] < error[1])

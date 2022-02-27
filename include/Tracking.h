@@ -24,9 +24,11 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
+
 #include "Atlas.h"
 #include "Frame.h"
 #include "FrameDrawer.h"
+#include "GeometricCamera.h"
 #include "ImuTypes.h"
 #include "KeyFrameDatabase.h"
 #include "LocalMapping.h"
@@ -34,13 +36,14 @@
 #include "MapDrawer.h"
 #include "ORBVocabulary.h"
 #include "ORBextractor.h"
+#include "OdomFactor.h"
 #include "OdomTypes.h"
 #include "Settings.h"
 #include "System.h"
-#include "Thirdparty/Sophus/sophus/interpolate.hpp"
 #include "Viewer.h"
+#include "WOdometryOptimization.h"
 
-#include "GeometricCamera.h"
+#include "Thirdparty/Sophus/sophus/interpolate.hpp"
 
 #include <mutex>
 #include <unordered_set>
@@ -113,12 +116,16 @@ class Tracking {
   int GetMatchesInliers() const;
 
   // DEBUG
-  void SaveSubTrajectory(string strNameFile_frames, string strNameFile_kf,
-                         string strFolder = "");
-  void SaveSubTrajectory(string strNameFile_frames, string strNameFile_kf,
-                         Map* pMap);
+  void SaveSubTrajectory(const string& strNameFile_frames,
+                         const string& strNameFile_kf,
+                         const string& strFolder = "");
+  void SaveSubTrajectory(const string& strNameFile_frames,
+                         const string& strNameFile_kf, Map* pMap);
 
   float GetImageScale() const;
+
+  void UpdateTbo(Sophus::SE3f& NewTbo);
+  void SetPlanarConstraints(PlanarConstraint* pPlanarConstraint);
 
 #ifdef REGISTER_LOOP
   void RequestStop();
@@ -140,7 +147,7 @@ class Tracking {
   };
 
   eTrackingState mState;
-  eTrackingState mLastProcessedState;
+  eTrackingState mLastProcessedState = SYSTEM_NOT_READY;
 
   // Input sensor
   int mSensor;
@@ -177,16 +184,16 @@ class Tracking {
   void Reset(bool bLocMap = false);
   void ResetActiveMap(bool bLocMap = false);
 
-  float mMeanTrack;
+  float mMeanTrack{};
   bool mbInitWith3KFs;
-  double t0;     // time-stamp of first read frame
-  double t0vis;  // time-stamp of first inserted keyframe
-  double t0IMU;  // time-stamp of IMU initialization
+  double t0{};     // time-stamp of first read frame
+  double t0vis{};  // time-stamp of first inserted keyframe
+  double t0IMU{};  // time-stamp of IMU initialization
   bool mFastInit = false;
 
   vector<MapPoint*> GetLocalMapMPS();
 
-  bool mbWriteStats;
+  bool mbWriteStats{};
 
 #ifdef REGISTER_TIMES
   void LocalMapStats2File();
@@ -221,6 +228,7 @@ class Tracking {
   void UpdateLastFrame();
   bool TrackWithMotionModel();
   bool PredictStateIMU();
+  bool PredictStateOdom();
 
   bool Relocalization();
 
@@ -246,7 +254,7 @@ class Tracking {
   bool mbMapUpdated;
 
   // Imu preintegration from last frame
-  IMU::Preintegrated* mpImuPreintegratedFromLastKF;
+  IMU::Preintegrated* mpImuPreintegratedFromLastKF{};
 
   // Queue of IMU measurements between frames
   std::list<IMU::Point> mlQueueImuData;
@@ -257,27 +265,28 @@ class Tracking {
   std::mutex mMutexImuQueue;
 
   // Imu calibration parameters
-  IMU::Calib* mpImuCalib;
+  IMU::Calib* mpImuCalib{};
 
   // Last Bias Estimation (at keyframe creation)
   IMU::Bias mLastBias;
 
   // WOdometry stuffs
   // Boolean use or not WOdometry factor
-  bool mbUseOdom;
+  bool mbUseOdom{};
   // Queue of WOdometry measurement between frames
   std::list<ODOM::Meas> mlQueueOdomData;
   std::mutex mMutexOdomQueue;
   // Odom Noises
   Eigen::Vector3d mOdomBias;
   Sophus::SE3f mTbo;
-
+  Sophus::SE3f mTco;
   // Vector of IMU measurements from previous to current frame
   std::vector<ODOM::Meas> mvOdomFromLastFrame;
   //  ORB_SLAM3::ODOM::Meas LastOdomMeas;
 
   // Preintegrated of Odometry measurement from Last KF
   ODOM::Preintegrated* mpOdomPreintegratedFromLastKF;
+  PlanarConstraint* mpPlanarConstraint;
 
   // In case of performing only localization, this flag is true when there
   // are no matches to points in the map. Still tracking will continue if
@@ -287,12 +296,12 @@ class Tracking {
   bool mbVO;
 
   // Other Thread Pointers
-  LocalMapping* mpLocalMapper;
-  LoopClosing* mpLoopClosing;
+  LocalMapping* mpLocalMapper{};
+  LoopClosing* mpLoopClosing{};
 
   // ORB
-  ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
-  ORBextractor* mpIniORBextractor;
+  ORBextractor *mpORBextractorLeft{}, *mpORBextractorRight{};
+  ORBextractor* mpIniORBextractor{};
 
   // BoW
   ORBVocabulary* mpORBVocabulary;
@@ -300,10 +309,10 @@ class Tracking {
 
   // Initalization (only for monocular)
   bool mbReadyToInitializate;
-  bool mbSetInit;
+  bool mbSetInit{};
 
   // Local Map
-  KeyFrame* mpReferenceKF;
+  KeyFrame* mpReferenceKF{};
   std::vector<KeyFrame*> mvpLocalKeyFrames;
   std::vector<MapPoint*> mvpLocalMapPoints;
 
@@ -323,43 +332,43 @@ class Tracking {
   cv::Mat mK;
   Eigen::Matrix3f mK_;
   cv::Mat mDistCoef;
-  float mbf;
-  float mImageScale;
+  float mbf{};
+  float mImageScale{};
 
-  float mImuFreq;
-  double mImuPer;
-  bool mInsertKFsLost;
+  float mImuFreq{};
+  double mImuPer{};
+  bool mInsertKFsLost{};
 
   // New KeyFrame rules (according to fps)
-  int mMinFrames;
-  int mMaxFrames;
+  int mMinFrames{};
+  int mMaxFrames{};
 
-  int mnFirstImuFrameId;
+  int mnFirstImuFrameId{};
   int mnFramesToResetIMU;
 
   // Threshold close/far points
   // Points seen as close by the stereo/RGBD sensor are considered reliable
   // and inserted from just one frame. Far points requiere a match in two
   // keyframes.
-  float mThDepth;
+  float mThDepth{};
 
   // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are
   // scaled.
-  float mDepthMapFactor;
+  float mDepthMapFactor{};
 
   // Current matches in frame
-  int mnMatchesInliers;
+  int mnMatchesInliers{};
 
   // Last Frame, KeyFrame and Relocalisation Info
   KeyFrame* mpLastKeyFrame;
-  unsigned int mnLastKeyFrameId;
+  unsigned int mnLastKeyFrameId{};
   unsigned int mnLastRelocFrameId;
-  double mTimeStampLost;
+  double mTimeStampLost{};
   double time_recently_lost;
 
   unsigned int mnFirstFrameId;
   unsigned int mnInitialFrameId;
-  unsigned int mnLastInitFrameId;
+  unsigned int mnLastInitFrameId{};
 
   bool mbCreatedMap;
 
@@ -368,7 +377,7 @@ class Tracking {
   Sophus::SE3f mVelocity;
 
   // Color order (true RGB, false BGR, ignored if grayscale)
-  bool mbRGB;
+  bool mbRGB{};
 
   list<MapPoint*> mlpTemporalPoints;
 
@@ -379,12 +388,12 @@ class Tracking {
   ofstream f_track_stats;
 
   ofstream f_track_times;
-  double mTime_PreIntIMU;
-  double mTime_PosePred;
-  double mTime_LocalMapTrack;
-  double mTime_NewKF_Dec;
+  double mTime_PreIntIMU{};
+  double mTime_PosePred{};
+  double mTime_LocalMapTrack{};
+  double mTime_NewKF_Dec{};
 
-  GeometricCamera *mpCamera, *mpCamera2;
+  GeometricCamera *mpCamera{}, *mpCamera2;
 
   int initID, lastID;
 
@@ -395,9 +404,9 @@ class Tracking {
 #ifdef REGISTER_LOOP
   bool Stop();
 
-  bool mbStopped;
-  bool mbStopRequested;
-  bool mbNotStop;
+  bool mbStopped{};
+  bool mbStopRequested{};
+  bool mbNotStop{};
   std::mutex mMutexStop;
 #endif
 

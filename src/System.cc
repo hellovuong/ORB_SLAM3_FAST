@@ -80,7 +80,7 @@ System::System(const string& strVocFile, const string& strSettingsFile,
     cout << "RGB-D-Inertial" << endl;
 
   // Check settings file
-  cv::FileStorage fsSettings(strSettingsFile.c_str(), cv::FileStorage::READ);
+  cv::FileStorage fsSettings(strSettingsFile, cv::FileStorage::READ);
   if (!fsSettings.isOpened()) {
     cerr << "Failed to open settings file at: " << strSettingsFile << endl;
     exit(-1);
@@ -383,11 +383,10 @@ Sophus::SE3f System::TrackRGBD(const cv::Mat& im, const cv::Mat& depthmap,
   }
 
   if (mSensor == System::IMU_RGBD)
-    for (size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
-      mpTracker->GrabImuData(vImuMeas[i_imu]);
+    for (const auto& vImuMea : vImuMeas) mpTracker->GrabImuData(vImuMea);
 
-  Sophus::SE3f Tcw =
-      mpTracker->GrabImageRGBD(imToFeed, imDepthToFeed, timestamp, filename);
+  Sophus::SE3f Tcw = mpTracker->GrabImageRGBD(imToFeed, imDepthToFeed,
+                                              timestamp, std::move(filename));
 
   unique_lock<mutex> lock2(mMutexState);
   mTrackingState = mpTracker->mState;
@@ -454,11 +453,10 @@ Sophus::SE3f System::TrackMonocular(const cv::Mat& im, const double& timestamp,
   }
 
   if (mSensor == System::IMU_MONOCULAR)
-    for (size_t i_imu = 0; i_imu < vImuMeas.size(); i_imu++)
-      mpTracker->GrabImuData(vImuMeas[i_imu]);
+    for (const auto& vImuMea : vImuMeas) mpTracker->GrabImuData(vImuMea);
 
   Sophus::SE3f Tcw =
-      mpTracker->GrabImageMonocular(imToFeed, timestamp, filename);
+      mpTracker->GrabImageMonocular(imToFeed, timestamp, std::move(filename));
 
   unique_lock<mutex> lock2(mMutexState);
   mTrackingState = mpTracker->mState;
@@ -571,12 +569,11 @@ void System::SaveTrajectoryTUM(const string& filename) {
 
   // For each frame we have a reference keyframe (lRit), the timestamp (lT) and
   // a flag which is true when tracking failed (lbL).
-  list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
-  list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-  list<bool>::iterator lbL = mpTracker->mlbLost.begin();
-  for (list<Sophus::SE3f>::iterator
-           lit = mpTracker->mlRelativeFramePoses.begin(),
-           lend = mpTracker->mlRelativeFramePoses.end();
+  auto lRit = mpTracker->mlpReferences.begin();
+  auto lT = mpTracker->mlFrameTimes.begin();
+  auto lbL = mpTracker->mlbLost.begin();
+  for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
+            lend = mpTracker->mlRelativeFramePoses.end();
        lit != lend; lit++, lRit++, lT++, lbL++) {
     if (*lbL) continue;
 
@@ -620,9 +617,7 @@ void System::SaveKeyFrameTrajectoryTUM(const string& filename) {
   f.open(filename.c_str());
   f << fixed;
 
-  for (size_t i = 0; i < vpKFs.size(); i++) {
-    KeyFrame* pKF = vpKFs[i];
-
+  for (auto pKF : vpKFs) {
     // pKF->SetPose(pKF->GetPose()*Two);
 
     if (pKF->isBad()) continue;
@@ -685,9 +680,9 @@ void System::SaveTrajectoryEuRoC(const string& filename) {
 
   // For each frame we have a reference keyframe (lRit), the timestamp (lT) and
   // a flag which is true when tracking failed (lbL).
-  list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
-  list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-  list<bool>::iterator lbL = mpTracker->mlbLost.begin();
+  auto lRit = mpTracker->mlpReferences.begin();
+  auto lT = mpTracker->mlFrameTimes.begin();
+  auto lbL = mpTracker->mlbLost.begin();
 
   // cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
   // cout << "size mlRelativeFramePoses: " <<
@@ -789,9 +784,9 @@ void System::SaveTrajectoryEuRoC(const string& filename, Map* pMap) {
 
   // For each frame we have a reference keyframe (lRit), the timestamp (lT) and
   // a flag which is true when tracking failed (lbL).
-  list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
-  list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-  list<bool>::iterator lbL = mpTracker->mlbLost.begin();
+  auto lRit = mpTracker->mlpReferences.begin();
+  auto lT = mpTracker->mlFrameTimes.begin();
+  auto lbL = mpTracker->mlbLost.begin();
 
   // cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
   // cout << "size mlRelativeFramePoses: " <<
@@ -1118,9 +1113,7 @@ void System::SaveKeyFrameTrajectoryEuRoC(const string& filename, Map* pMap) {
   f.open(filename.c_str());
   f << fixed;
 
-  for (size_t i = 0; i < vpKFs.size(); i++) {
-    KeyFrame* pKF = vpKFs[i];
-
+  for (auto pKF : vpKFs) {
     if (!pKF || pKF->isBad()) continue;
     if (mSensor == IMU_MONOCULAR || mSensor == IMU_STEREO ||
         mSensor == IMU_RGBD) {
@@ -1229,11 +1222,10 @@ void System::SaveTrajectoryKITTI(const string& filename) {
 
   // For each frame we have a reference keyframe (lRit), the timestamp (lT) and
   // a flag which is true when tracking failed (lbL).
-  list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
-  list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-  for (list<Sophus::SE3f>::iterator
-           lit = mpTracker->mlRelativeFramePoses.begin(),
-           lend = mpTracker->mlRelativeFramePoses.end();
+  auto lRit = mpTracker->mlpReferences.begin();
+  auto lT = mpTracker->mlFrameTimes.begin();
+  for (auto lit = mpTracker->mlRelativeFramePoses.begin(),
+            lend = mpTracker->mlRelativeFramePoses.end();
        lit != lend; lit++, lRit++, lT++) {
     ORB_SLAM3::KeyFrame* pKF = *lRit;
 
@@ -1473,7 +1465,7 @@ bool System::LoadAtlas(int type) {
     string strInputVocabularyChecksum =
         CalculateCheckSum(mStrVocabularyFilePath, TEXT_FILE);
 
-    if (strInputVocabularyChecksum.compare(strVocChecksum) != 0) {
+    if (strInputVocabularyChecksum != strVocChecksum) {
       cout << "The vocabulary load isn't the same which the load session was "
               "created "
            << endl;
@@ -1490,7 +1482,7 @@ bool System::LoadAtlas(int type) {
   return false;
 }
 
-string System::CalculateCheckSum(string filename, int type) {
+string System::CalculateCheckSum(const string& filename, int type) {
   string checksum = "";
 
   unsigned char c[MD5_DIGEST_LENGTH];
@@ -1518,9 +1510,9 @@ string System::CalculateCheckSum(string filename, int type) {
 
   MD5_Final(c, &md5Context);
 
-  for (int i = 0; i < MD5_DIGEST_LENGTH; i++) {
+  for (unsigned char i : c) {
     char aux[10];
-    sprintf(aux, "%02x", c[i]);
+    sprintf(aux, "%02x", i);
     checksum = checksum + aux;
   }
 
@@ -1528,11 +1520,6 @@ string System::CalculateCheckSum(string filename, int type) {
 }
 void System::SaveTrajectoryUZH(const string& filename) {
   cout << endl << "Saving trajectory to " << filename << " ..." << endl;
-  /*if(mSensor==MONOCULAR)
-  {
-      cerr << "ERROR: SaveTrajectoryEuRoC cannot be used for monocular." <<
-  endl; return;
-  }*/
 
   vector<Map*> vpMaps = mpAtlas->GetAllMaps();
   int numMaxKFs = 0;
@@ -1573,9 +1560,9 @@ void System::SaveTrajectoryUZH(const string& filename) {
 
   // For each frame we have a reference keyframe (lRit), the timestamp (lT) and
   // a flag which is true when tracking failed (lbL).
-  list<ORB_SLAM3::KeyFrame*>::iterator lRit = mpTracker->mlpReferences.begin();
-  list<double>::iterator lT = mpTracker->mlFrameTimes.begin();
-  list<bool>::iterator lbL = mpTracker->mlbLost.begin();
+  auto lRit = mpTracker->mlpReferences.begin();
+  auto lT = mpTracker->mlFrameTimes.begin();
+  auto lbL = mpTracker->mlbLost.begin();
 
   // cout << "size mlpReferences: " << mpTracker->mlpReferences.size() << endl;
   // cout << "size mlRelativeFramePoses: " <<
@@ -1614,8 +1601,8 @@ void System::SaveTrajectoryUZH(const string& filename) {
 
     // cout << "3" << endl;
 
-    Trw = Trw * pKF->GetPose() *
-          Twb;  // Tcp*Tpw*Twb0=Tcb0 where b0 is the new world reference
+    // Tcp*Tpw*Twb0=Tcb0 where b0 is the new world reference
+    Trw = Trw * pKF->GetPose() * Twb;
 
     // cout << "4" << endl;
 
