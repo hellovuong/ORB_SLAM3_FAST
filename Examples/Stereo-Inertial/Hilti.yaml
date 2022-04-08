@@ -1,0 +1,117 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "KannalaBrandt8"
+
+# Left Camera calibration and distortion parameters (OpenCV)
+Camera1.fx: 352.6489794433894
+Camera1.fy: 352.8586498571586
+Camera1.cx: 347.8170010310082
+Camera1.cy: 270.5806692485468
+
+# Kannala-Brandt distortion parameters
+Camera1.k1: -0.039086652082708805
+Camera1.k2: -0.005525347047415151
+Camera1.k3: 0.004398151558986798
+Camera1.k4: -0.0019701263170917808
+
+# Right Camera calibration and distortion parameters (OpenCV)
+Camera2.fx: 351.31400364193297
+Camera2.fy: 351.4911744656785
+Camera2.cx: 367.8522793375995
+Camera2.cy: 253.8402144980996
+
+# Kannala-Brandt distortion parameters
+Camera2.k1: -0.03696737352869157
+Camera2.k2: -0.008917880497032812
+Camera2.k3: 0.008912969593422046
+Camera2.k4: -0.0037685977496087313
+
+# Transformation matrix from right camera to left camera
+Stereo.T_c1_c2: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data: [ 0.9999761426988956,    0.004698109260098521,    -0.005063773535634404,   0.10817339479208792,
+          -0.004705552944957792, 0.9999878643586437,      -0.0014590774217762541,  0.0005128409082424196,
+          0.005056857178348414,  0.0014828704666000705,   0.9999861145489266,      0.0006919599620310546,
+          0.0,0.0,0.0,1.0]
+
+# Lapping area between images
+Camera1.overlappingBegin: 0
+Camera1.overlappingEnd: 539
+
+Camera2.overlappingBegin: 0
+Camera2.overlappingEnd: 539
+
+# Camera resolution
+Camera.width: 720
+Camera.height: 540
+
+# Camera frames per second 
+Camera.fps: 30
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 40.0
+
+# Transformation from body-frame (imu) to left camera
+IMU.T_b_c1: !!opencv-matrix
+   rows: 4
+   cols: 4
+   dt: f
+#   data: [  0.00670802,  0.00242564,  0.999975,      0.0512635,
+#            0.999926,    0.0100912,   -0.00673218,   0.0453901,
+#            -0.0101073,  0.999946,    -0.00235777,  -0.0132149,
+#            0.0,           0.0,           0.0 ,          1.0]
+   data: [  0.00168428,  0.000963859,     0.999998,    0.0503898,
+            0.999984,   0.00542446,  -0.00168948,    -0.062785,
+            -0.00542608,     0.999985, -0.000954707,   -0.0131429,
+            0,            0,            0,            1]
+
+# IMU noise
+IMU.NoiseGyro: 0.00016 # 0.004 (VINS) # 0.00016 (TUM) # 0.00016    # rad/s^0.5
+IMU.NoiseAcc: 0.0028 # 0.04 (VINS) # 0.0028 (TUM) # 0.0028     # m/s^1.5
+IMU.GyroWalk: 0.000022 # 0.000022 (VINS and TUM) rad/s^1.5
+IMU.AccWalk: 0.00086 # 0.0004 (VINS) # 0.00086 # 0.00086    # m/s^2.5
+IMU.Frequency: 400.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1250 # Tested with 1250
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
