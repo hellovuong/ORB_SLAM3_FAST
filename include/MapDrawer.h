@@ -51,10 +51,12 @@ class MapDrawer {
                      const bool bDrawOptLba);
   void DrawCurrentCamera(pangolin::OpenGlMatrix& Twc);
   void SetCurrentCameraPose(const Sophus::SE3f& Tcw);
+  void SetCurrentSideCameraPose(const Sophus::SE3f& Tcw);
   void SetReferenceKeyFrame(KeyFrame* pKF);
   void GetCurrentOpenGLCameraMatrix(pangolin::OpenGlMatrix& M,
                                     pangolin::OpenGlMatrix& MOw);
-
+  void GetCurrentSideOpenGLCameraMatrix(pangolin::OpenGlMatrix& M,
+                                        pangolin::OpenGlMatrix& MOw);
  private:
   bool ParseViewerParamFile(cv::FileStorage& fSettings);
 
@@ -66,6 +68,7 @@ class MapDrawer {
   float mCameraLineWidth;
 
   Sophus::SE3f mCameraPose;
+  Sophus::SE3f mCameraSideLeftPose;
 
   std::mutex mMutexCamera;
 

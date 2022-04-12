@@ -55,7 +55,7 @@ class Settings {
   /*
    * Constructor from file
    */
-  Settings(const std::string& configFile, const int& sensor);
+  Settings(const std::string& configFile, const int& sensor, bool is_multi = false);
 
   /*
    * Ostream operator overloading to dump settings to the terminal
@@ -68,6 +68,9 @@ class Settings {
   CameraType cameraType() { return cameraType_; }
   GeometricCamera* camera1() { return calibration1_; }
   GeometricCamera* camera2() { return calibration2_; }
+  GeometricCamera* camera3() { return calibration3_; }
+  GeometricCamera* camera4() { return calibration4_; }
+
   cv::Mat camera1DistortionCoef() {
     return cv::Mat(
         vPinHoleDistorsion1_.size(), 1, CV_32F, vPinHoleDistorsion1_.data());
@@ -78,6 +81,7 @@ class Settings {
   }
 
   Sophus::SE3f Tlr() { return Tlr_; }
+  Sophus::SE3f Tc1c3() { return Tc1c3_; }
   float bf() { return bf_; }
   float b() { return b_; }
   float thDepth() { return thDepth_; }
@@ -155,6 +159,7 @@ class Settings {
 
   void readCamera1(cv::FileStorage& fSettings);
   void readCamera2(cv::FileStorage& fSettings);
+  void readCamera(const std::string& camera, cv::FileStorage& fSettings);
   void readImageInfo(cv::FileStorage& fSettings);
   void readIMU(cv::FileStorage& fSettings);
   void readRGBD(cv::FileStorage& fSettings);
@@ -173,6 +178,8 @@ class Settings {
    */
   GeometricCamera *calibration1_, *calibration2_;  // Camera calibration
   GeometricCamera *originalCalib1_, *originalCalib2_;
+  GeometricCamera *calibration3_, *calibration4_;  // Camera calibration
+  GeometricCamera *originalCalib3_, *originalCalib4_;
   std::vector<float> vPinHoleDistorsion1_, vPinHoleDistorsion2_;
 
   cv::Size originalImSize_, newImSize_;
@@ -184,6 +191,8 @@ class Settings {
   bool bNeedToResize1_, bNeedToResize2_;
 
   Sophus::SE3f Tlr_;
+  Sophus::SE3f Tc1c3_;
+
   float thDepth_;
   float bf_, b_;
 
@@ -236,6 +245,10 @@ class Settings {
    * Other stuff
    */
   float thFarPoints_;
+  bool is_multi_ = false;
+
+ public:
+  bool isMulti() const;
 };
 };  // namespace ORB_SLAM3
 

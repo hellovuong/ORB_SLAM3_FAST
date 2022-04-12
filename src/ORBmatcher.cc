@@ -631,10 +631,10 @@ int ORBmatcher::SearchForInitialization(Frame& F1,
   vector<int> vnMatches21(F2.mvKeysUn.size(), -1);
 
   // Traverse the feature points in the initialization frame
-  tbb::parallel_for(
-      tbb::blocked_range<size_t>(0, F1.mvKeysUn.size()),
-      [&](tbb::blocked_range<size_t> rF1mvKeysUn) {
-        for (size_t i1 = rF1mvKeysUn.begin(), iend1 = rF1mvKeysUn.end();
+//  tbb::parallel_for(
+//      tbb::blocked_range<size_t>(0, F1.mvKeysUn.size()),
+//      [&](tbb::blocked_range<size_t> rF1mvKeysUn) {
+        for (size_t i1 = 0, iend1 = F1.mvKeysUn.size();
              i1 < iend1;
              i1++) {
           cv::KeyPoint kp1 = F1.mvKeysUn[i1];
@@ -734,7 +734,7 @@ int ORBmatcher::SearchForInitialization(Frame& F1,
             }
           }
         }
-      });
+//      });
 
   if (mbCheckOrientation) {
     int ind1 = -1;

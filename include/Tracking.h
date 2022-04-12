@@ -350,11 +350,12 @@ protected:
     double mTime_LocalMapTrack;
     double mTime_NewKF_Dec;
 
-    GeometricCamera* mpCamera, *mpCamera2;
+    GeometricCamera* mpCamera, *mpCamera2, *mpCamera3;
 
     int initID, lastID;
 
     Sophus::SE3f mTlr;
+    Sophus::SE3f mTc1c3;
 
     void newParameterLoader(Settings* settings);
 
@@ -369,6 +370,26 @@ protected:
 
 public:
     cv::Mat mImRight;
+
+    // For multi camera
+    bool is_multi = false;
+    // image
+    cv::Mat mImSideLeft;
+    cv::Mat mImSideRight;
+    // Frame Obj
+    Frame mInitialSideLeftFrame;
+    Frame mCurrentSideLeftFrame;
+    Frame mLastSideLeftFrame;
+    // For initialization
+    std::vector<int> mvSideLeftIniMatches;
+    std::vector<cv::Point2f> mvbSideLeftPrevMatched;
+    // state
+    eTrackingState mStateSide = NOT_INITIALIZED;
+    // triangulate with kf
+    Frame SideLeftKF;
+    // create new map point from side view // TODO: Only for testing, delete it later
+    void CreateMapPointsFromSide();
+    void SideViewInitialization();
 };
 
 } //namespace ORB_SLAM

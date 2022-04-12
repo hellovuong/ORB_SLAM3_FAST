@@ -204,9 +204,13 @@ void Viewer::Run() {
           .SetHandler(new pangolin::Handler3D(s_cam));
 
   pangolin::OpenGlMatrix Twc, Twr;
+  pangolin::OpenGlMatrix Twc3;
   Twc.SetIdentity();
+  Twc3.SetIdentity();
   pangolin::OpenGlMatrix Ow;  // Oriented with g in the z axis
+  pangolin::OpenGlMatrix O3w;  // Oriented with g in the z axis
   Ow.SetIdentity();
+  O3w.SetIdentity();
   cv::namedWindow("ORB-SLAM3: Current Frame");
 
   bool bFollow = true;
@@ -227,7 +231,7 @@ void Viewer::Run() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mpMapDrawer->GetCurrentOpenGLCameraMatrix(Twc, Ow);
-
+    mpMapDrawer->GetCurrentSideOpenGLCameraMatrix(Twc3,O3w);
     if (mbStopTrack) {
       menuStepByStep = true;
       mbStopTrack = false;
@@ -302,6 +306,7 @@ void Viewer::Run() {
     d_cam.Activate(s_cam);
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     mpMapDrawer->DrawCurrentCamera(Twc);
+    mpMapDrawer->DrawCurrentCamera(Twc3);
     if (menuShowKeyFrames || menuShowGraph || menuShowInertialGraph ||
         menuShowOptLba)
       mpMapDrawer->DrawKeyFrames(menuShowKeyFrames,
@@ -327,7 +332,7 @@ void Viewer::Run() {
       int height = toShow.rows * mImageViewerScale;
       cv::resize(toShow, toShow, cv::Size(width, height));
     }
-
+    cv::resize(toShow, toShow, cv::Size(600, 400));
     cv::imshow("ORB-SLAM3: Current Frame", toShow);
     cv::waitKey(mT);
 

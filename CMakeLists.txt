@@ -175,6 +175,10 @@ add_executable(rgbd_zed2
         Examples/RGB-D/rgbd_zed2.cc)
 target_link_libraries(rgbd_zed2 ${PROJECT_NAME})
 
+# Multi Cam
+add_executable(multi_cam Examples/Multi-Cam/multi_cam.cpp)
+target_link_libraries(multi_cam ${PROJECT_NAME})
+
 # Build examples
 if (BUILD_EXAMPLES)
     # RGB-D examples

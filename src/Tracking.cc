@@ -605,7 +605,11 @@ void Tracking::newParameterLoader(Settings* settings) {
     mbf = settings->bf();
     mThDepth = settings->b() * settings->thDepth();
   }
-
+  if(settings->isMulti()){
+    is_multi = true;
+    mpCamera3 = settings->camera3();
+    mTc1c3 = settings->Tc1c3();
+  }
   if (mSensor == System::RGBD || mSensor == System::IMU_RGBD) {
     mDepthMapFactor = settings->depthMapFactor();
     if (fabs(mDepthMapFactor) < 1e-5)
@@ -632,7 +636,7 @@ void Tracking::newParameterLoader(Settings* settings) {
     mpORBextractorRight = new ORBextractor(
         nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-  if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR)
+  if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR || is_multi)
     mpIniORBextractor = new ORBextractor(
         5 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
@@ -1396,18 +1400,26 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat& imRectLeft,
     if (mbRGB) {
       cvtColor(mImGray, mImGray, cv::COLOR_RGB2GRAY);
       cvtColor(imGrayRight, imGrayRight, cv::COLOR_RGB2GRAY);
+      if(is_multi)
+        cvtColor(mImSideLeft,mImSideLeft,cv::COLOR_RGB2GRAY);
     } else {
       cvtColor(mImGray, mImGray, cv::COLOR_BGR2GRAY);
       cvtColor(imGrayRight, imGrayRight, cv::COLOR_BGR2GRAY);
+      if(is_multi)
+        cvtColor(mImSideLeft,mImSideLeft,cv::COLOR_BGR2GRAY);
     }
   } else if (mImGray.channels() == 4) {
     // cout << "Image with 4 channels" << endl;
     if (mbRGB) {
       cvtColor(mImGray, mImGray, cv::COLOR_RGBA2GRAY);
       cvtColor(imGrayRight, imGrayRight, cv::COLOR_RGBA2GRAY);
+      if(is_multi)
+        cvtColor(mImSideLeft,mImSideLeft,cv::COLOR_RGBA2GRAY);
     } else {
       cvtColor(mImGray, mImGray, cv::COLOR_BGRA2GRAY);
       cvtColor(imGrayRight, imGrayRight, cv::COLOR_BGRA2GRAY);
+      if(is_multi)
+        cvtColor(mImSideLeft,mImSideLeft,cv::COLOR_BGRA2GRAY);
     }
   }
 
@@ -1469,7 +1481,23 @@ Sophus::SE3f Tracking::GrabImageStereo(const cv::Mat& imRectLeft,
                           mTlr,
                           &mLastFrame,
                           *mpImuCalib);
-
+  if(is_multi) {
+    if(mStateSide == NOT_INITIALIZED)
+      mCurrentSideLeftFrame = Frame(mImSideLeft, timestamp, mpORBextractorLeft, mpORBVocabulary, mpCamera,
+              mDistCoef, mbf, mThDepth, &mLastSideLeftFrame);
+    else
+      mCurrentSideLeftFrame = Frame(mImSideLeft,
+                                    timestamp,
+                                    mpORBextractorLeft,
+                                    mpORBVocabulary,
+                                    mpCamera3,
+                                    mDistCoef,
+                                    mbf,
+                                    mThDepth,
+                                    &mLastSideLeftFrame);
+//    std::cout << "extract: " << mCurrentFrame.mvKeys.size() << " from left view \n";
+//    std::cout << "extract: " << mCurrentSideLeftFrame.mvKeys.size() << " from side left frame\n";
+  }
   // cout << "Incoming frame ended" << endl;
 
   mCurrentFrame.mNameFile = filename;
@@ -2160,10 +2188,13 @@ void Tracking::Track() {
 #endif
 
     // Update drawer
+    mCurrentSideLeftFrame.SetPose(mTc1c3.inverse() * mCurrentFrame.GetPose());
+    SideViewInitialization();
     mpFrameDrawer->Update(this);
-    if (mCurrentFrame.isSet())
+    if (mCurrentFrame.isSet()) {
       mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.GetPose());
-
+      mpMapDrawer->SetCurrentSideCameraPose(mCurrentSideLeftFrame.GetPose());
+    }
     if (bOK || mState == RECENTLY_LOST) {
       // Update motion model
       if (mLastFrame.isSet() && mCurrentFrame.isSet()) {
@@ -2259,6 +2290,7 @@ void Tracking::Track() {
       mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
     mLastFrame = Frame(mCurrentFrame);
+    mLastSideLeftFrame = Frame(mCurrentSideLeftFrame);
   }
 
   if (mState == OK || mState == RECENTLY_LOST) {
@@ -2319,8 +2351,11 @@ void Tracking::StereoInitialization() {
       Eigen::Vector3f Vwb0;
       Vwb0.setZero();
       mCurrentFrame.SetImuPoseVelocity(Rwb0, twb0, Vwb0);
-    } else
+    } else {
       mCurrentFrame.SetPose(Sophus::SE3f());
+      // Tc3w = Tc3c1 * Tc1w
+      mCurrentSideLeftFrame.SetPose(mTc1c3.inverse());
+    }
 
     // Create KeyFrame
     KeyFrame* pKFini =
@@ -3951,6 +3986,272 @@ void Tracking::SaveSubTrajectory(string strNameFile_frames,
 }
 
 float Tracking::GetImageScale() { return mImageScale; }
+
+void Tracking::CreateMapPointsFromSide() {
+
+  GeometricCamera *pCamera1 = mCurrentSideLeftFrame.mpCamera,
+                  *pCamera2 = SideLeftKF.mpCamera;
+
+  // Search matches with epipolar restriction and triangulate
+  Sophus::SE3<float> sophTcw1 = mCurrentSideLeftFrame.GetPose();
+  Eigen::Matrix<float, 3, 4> eigTcw1 = sophTcw1.matrix3x4();
+  Eigen::Matrix<float, 3, 3> Rcw1 = eigTcw1.block<3, 3>(0, 0);
+  Eigen::Matrix<float, 3, 3> Rwc1 = Rcw1.transpose();
+  Eigen::Vector3f tcw1 = sophTcw1.translation();
+  Eigen::Vector3f Ow1 = mCurrentSideLeftFrame.GetCameraCenter();
+
+  // Check first that baseline is not too short
+  Eigen::Vector3f Ow2 = SideLeftKF.GetCameraCenter();
+  Eigen::Vector3f vBaseline = Ow2 - Ow1;
+
+  const float baseline = vBaseline.norm();
+  const float b = mbf / SideLeftKF.fx;
+  if(baseline < b)
+    return;
+
+  // Search matches that fulfill epipolar constraint
+  vector<pair<size_t, size_t>> vMatchedIndices;
+  bool bCoarse = false;
+  float th = 0.6f;
+  ORBmatcher matcher(th, false);
+  matcher.SearchByProjection(mCurrentSideLeftFrame, SideLeftKF, 7.0f, false);
+
+  Sophus::SE3<float> sophTcw2 = SideLeftKF.GetPose();
+  Eigen::Matrix<float, 3, 4> eigTcw2 = sophTcw2.matrix3x4();
+  Eigen::Matrix<float, 3, 3> Rcw2 = eigTcw2.block<3, 3>(0, 0);
+  Eigen::Matrix<float, 3, 3> Rwc2 = Rcw2.transpose();
+  Eigen::Vector3f tcw2 = sophTcw2.translation();
+
+  const float& fx2 = SideLeftKF.fx;
+  const float& fy2 = SideLeftKF.fy;
+  const float& cx2 = SideLeftKF.cx;
+  const float& cy2 = SideLeftKF.cy;
+  const float& invfx2 = SideLeftKF.invfx;
+  const float& invfy2 = SideLeftKF.invfy;
+
+  const float ratioFactor = 1.5f * SideLeftKF.mfScaleFactor;
+
+  // Triangulate each match
+  const int nmatches = vMatchedIndices.size();
+
+  for (int ikp = 0; ikp < nmatches; ikp++) {
+    const int& idx1 = vMatchedIndices[ikp].first;
+    const int& idx2 = vMatchedIndices[ikp].second;
+
+    const cv::KeyPoint& kp1 =
+        (mCurrentSideLeftFrame.Nleft == -1)
+            ? mCurrentSideLeftFrame.mvKeysUn[idx1]
+            : (idx1 < mCurrentSideLeftFrame.Nleft)
+                  ? mCurrentSideLeftFrame.mvKeys[idx1]
+                  : mCurrentSideLeftFrame
+                        .mvKeysRight[idx1 - mCurrentSideLeftFrame.Nleft];
+
+    const float kp1_ur = mCurrentSideLeftFrame.mvuRight[idx1];
+    bool bStereo1 = (!mCurrentSideLeftFrame.mpCamera2 && kp1_ur >= 0);
+    const bool bRight1 = !(mCurrentSideLeftFrame.Nleft == -1 ||
+                           idx1 < mCurrentSideLeftFrame.Nleft);
+
+    const cv::KeyPoint& kp2 =
+        (SideLeftKF.Nleft == -1)    ? SideLeftKF.mvKeysUn[idx2]
+        : (idx2 < SideLeftKF.Nleft) ? SideLeftKF.mvKeys[idx2]
+                               : SideLeftKF.mvKeysRight[idx2 - SideLeftKF.Nleft];
+
+    const float kp2_ur = SideLeftKF.mvuRight[idx2];
+    bool bStereo2 = (!SideLeftKF.mpCamera2 && kp2_ur >= 0);
+    const bool bRight2 = !(SideLeftKF.Nleft == -1 || idx2 < SideLeftKF.Nleft);
+
+    // Check parallax between rays
+    Eigen::Vector3f xn1 = pCamera1->unprojectEig(kp1.pt);
+    Eigen::Vector3f xn2 = pCamera2->unprojectEig(kp2.pt);
+
+    Eigen::Vector3f ray1 = Rwc1 * xn1;
+    Eigen::Vector3f ray2 = Rwc2 * xn2;
+    const float cosParallaxRays =
+        ray1.dot(ray2) / (ray1.norm() * ray2.norm());
+
+    float cosParallaxStereo = cosParallaxRays + 1;
+    float cosParallaxStereo1 = cosParallaxStereo;
+    float cosParallaxStereo2 = cosParallaxStereo;
+
+    Eigen::Vector3f x3D;
+
+    bool goodProj = false;
+    bool bPointStereo = false;
+
+    if (cosParallaxRays < cosParallaxStereo && cosParallaxRays > 0 &&
+        (bStereo1 || bStereo2 || (cosParallaxRays < 0.9998)) ) {
+      goodProj =
+          GeometricTools::Triangulate(xn1, xn2, eigTcw1, eigTcw2, x3D);
+      if (!goodProj) continue;
+    } else {
+      continue;  // No stereo and very low parallax
+    }
+    if (!goodProj) continue;
+
+    // Check triangulation in front of cameras -> depth > 0
+    float z1 = Rcw1.row(2).dot(x3D) + tcw1(2);
+    if (z1 <= 0) continue;
+
+    float z2 = Rcw2.row(2).dot(x3D) + tcw2(2);
+    if (z2 <= 0) continue;
+
+    // Check reprojection error in current frame
+    const float& sigmaSquare1 =
+        mCurrentSideLeftFrame.mvLevelSigma2[kp1.octave];
+    const float x1 = Rcw1.row(0).dot(x3D) + tcw1(0);
+    const float y1 = Rcw1.row(1).dot(x3D) + tcw1(1);
+    const float invz1 = 1.0 / z1;
+
+    if (!bStereo1) {
+      cv::Point2f uv1 = pCamera1->project(cv::Point3f(x1, y1, z1));
+      float errX1 = uv1.x - kp1.pt.x;
+      float errY1 = uv1.y - kp1.pt.y;
+
+      if ((errX1 * errX1 + errY1 * errY1) > 5.991 * sigmaSquare1)
+        continue;
+    }
+
+    // Check reprojection error in keyframe keyframe
+    const float sigmaSquare2 = SideLeftKF.mvLevelSigma2[kp2.octave];
+    const float x2 = Rcw2.row(0).dot(x3D) + tcw2(0);
+    const float y2 = Rcw2.row(1).dot(x3D) + tcw2(1);
+    const float invz2 = 1.0 / z2;
+    if (!bStereo2) {
+      cv::Point2f uv2 = pCamera2->project(cv::Point3f(x2, y2, z2));
+      float errX2 = uv2.x - kp2.pt.x;
+      float errY2 = uv2.y - kp2.pt.y;
+      if ((errX2 * errX2 + errY2 * errY2) > 5.991 * sigmaSquare2)
+        continue;
+    }
+
+    // Check scale consistency
+    Eigen::Vector3f normal1 = x3D - Ow1;
+    float dist1 = normal1.norm();
+
+    Eigen::Vector3f normal2 = x3D - Ow2;
+    float dist2 = normal2.norm();
+
+    if (dist1 == 0 || dist2 == 0) continue;
+
+    const float ratioDist = dist2 / dist1;
+    const float ratioOctave =
+        mCurrentSideLeftFrame.mvScaleFactors[kp1.octave] /
+        SideLeftKF.mvScaleFactors[kp2.octave];
+
+    if (ratioDist * ratioFactor < ratioOctave ||
+        ratioDist > ratioOctave * ratioFactor)
+      continue;
+
+    // Triangulation is succesfull
+    MapPoint* pMP =
+        new MapPoint(x3D, nullptr, mpAtlas->GetCurrentMap());
+  }
+
+}
+void Tracking::SideViewInitialization() {
+  if (!mbReadyToInitializate) {
+    // Set Reference Frame
+    if (mCurrentFrame.mvKeys.size() > 100) {
+      mInitialSideLeftFrame = Frame(mCurrentSideLeftFrame);
+      mLastSideLeftFrame = Frame(mCurrentSideLeftFrame);
+
+      mbReadyToInitializate = true;
+
+      return;
+    }
+  } else {
+    if (((int)mCurrentFrame.mvKeys.size() <= 100) ||
+        ((mSensor == System::IMU_MONOCULAR) &&
+         (mLastFrame.mTimeStamp - mInitialFrame.mTimeStamp > 1.0))) {
+      mbReadyToInitializate = false;
+      return;
+    }
+    // T12 = Tc1w * Twc2
+    Sophus::SE3f T12 = mInitialSideLeftFrame.GetPose() * mCurrentSideLeftFrame.GetPose().inverse();
+    // check baseline
+    Eigen::Vector3f Ow1 = mInitialSideLeftFrame.GetCameraCenter();
+    Eigen::Vector3f Ow2 = mCurrentSideLeftFrame.GetCameraCenter();
+    Eigen::Vector3f vBaseline = Ow2 - Ow1;
+    const float baseline = vBaseline.norm();
+    if(baseline < 0.02){
+      std::cout << "baseline: " << baseline << " < 0.02" << std::endl;
+      mbReadyToInitializate = false;
+      return;
+    }
+    vector<cv::KeyPoint> stereo1(mInitialSideLeftFrame.mvKeys.begin() + mInitialSideLeftFrame.monoLeft,
+                                 mInitialSideLeftFrame.mvKeys.end());
+    vector<cv::KeyPoint> stereo2(mCurrentSideLeftFrame.mvKeys.begin() + mCurrentSideLeftFrame.monoLeft,
+                                     mCurrentSideLeftFrame.mvKeys.end());
+
+    cv::Mat stereoDesc1 = mInitialSideLeftFrame.mDescriptors;
+    cv::Mat stereoDesc2 = mCurrentSideLeftFrame.mDescriptors;
+
+    vector<int> mvLeftToRightMatch = vector<int>(mInitialSideLeftFrame.N, -1);
+    vector<int> mvRightToLeftMatch = vector<int>(mCurrentSideLeftFrame.N, -1);
+    vector<float> mvDepth = vector<float>(mInitialSideLeftFrame.N, -1.0f);
+    vector<float> mvuRight = vector<float>(mInitialSideLeftFrame.N, -1);
+    vector<Eigen::Vector3f> mvStereo3Dpoints = vector<Eigen::Vector3f>(mInitialSideLeftFrame.N);
+    int mnCloseMPs = 0;
+
+    int nMatches = 0;
+    int descMatches = 0;
+
+    // Perform a brute force between Keypoint in the left and right image
+    vector<vector<cv::DMatch>> matches;
+    // For stereo fisheye matching
+    cv::BFMatcher BFmatcher = cv::BFMatcher(cv::NORM_HAMMING);
+    BFmatcher.knnMatch(stereoDesc1, stereoDesc2, matches, 2);
+
+//    std::cout << "Number of matches from sideview: " << matches.size() << std::endl;
+    // Check if there are enough correspondences
+    std::vector< cv::DMatch > good_matches;
+    for (int i = 0; i < matches.size(); i ++) {
+      float rejectRatio = 0.8;
+      if (matches[i][0].distance / matches[i][1].distance > rejectRatio)
+        continue;
+      good_matches.push_back(matches[i][0]);
+    }
+    std::cout << "Number of matches from sideview: " << good_matches.size() << std::endl;
+    if (good_matches.size() < 100) {
+      mbReadyToInitializate = false;
+      return;
+    }
+    // Check matches using Lowe's ratio
+    for (vector<vector<cv::DMatch>>::iterator it = matches.begin();
+         it != matches.end();
+         ++it) {
+      if ((*it).size() >= 2 && (*it)[0].distance < (*it)[1].distance * 0.7) {
+        // For every good match, check parallax and reprojection error to discard
+        // spurious matches
+        Eigen::Vector3f p3D;
+        descMatches++;
+        float
+            sigma1 = mInitialSideLeftFrame.mvLevelSigma2[mInitialSideLeftFrame.mvKeys[(*it)[0].queryIdx].octave],
+            sigma2 =
+                mCurrentSideLeftFrame.mvLevelSigma2[mCurrentSideLeftFrame.mvKeys[(*it)[0].trainIdx].octave];
+        float depth = static_cast<KannalaBrandt8*>(mInitialSideLeftFrame.mpCamera)->TriangulateMatches(
+            mCurrentSideLeftFrame.mpCamera,
+            mInitialSideLeftFrame.mvKeys[(*it)[0].queryIdx],
+            mCurrentSideLeftFrame.mvKeys[(*it)[0].trainIdx],
+            T12.rotationMatrix().cast<float>(),
+            T12.translation().cast<float>(),
+            sigma1,
+            sigma2,
+            p3D);
+        if (depth > 0.0001f) {
+//          mvLeftToRightMatch[(*it)[0].queryIdx + monoLeft] =
+//              (*it)[0].trainIdx + monoRight;
+//          mvRightToLeftMatch[(*it)[0].trainIdx + monoRight] =
+//              (*it)[0].queryIdx + monoLeft;
+//          mvStereo3Dpoints[(*it)[0].queryIdx + monoLeft] = p3D;
+//          mvDepth[(*it)[0].queryIdx + monoLeft] = depth;
+          nMatches++;
+        }
+      }
+    }
+    std::cout << "created " << nMatches << " pts" << std::endl;
+  }
+}
 
 #ifdef REGISTER_LOOP
 void Tracking::RequestStop() {

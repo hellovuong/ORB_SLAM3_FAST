@@ -93,8 +93,13 @@ System::System(const string& strVocFile,
 
   cv::FileNode node = fsSettings["File.version"];
   if (!node.empty() && node.isString() && node.string() == "1.0") {
-    settings_ = new Settings(strSettingsFile, mSensor);
-
+    cv::FileNode multi_node = fsSettings["System.Multi_Cam"];
+    if(multi_node.empty()) {
+      settings_ = new Settings(strSettingsFile, mSensor);
+    }
+    else{
+      settings_ = new Settings(strSettingsFile, mSensor, true);
+    }
     mStrLoadAtlasFromFile = settings_->atlasLoadFile();
     mStrSaveAtlasToFile = settings_->atlasSaveFile();
 
@@ -1680,6 +1685,16 @@ void System::SaveTrajectoryUZH(const string& filename) {
   // cout << "end saving trajectory" << endl;
   f.close();
   cout << endl << "End of saving trajectory to " << filename << " ..." << endl;
+}
+Sophus::SE3f System::TrackMulti_Cam(const cv::Mat& imLeft,
+                                    const cv::Mat& imRight,
+                                    const cv::Mat& imSideLeft,
+                                    const double& timestamp,
+                                    const vector<IMU::Point>& vImuMeas,
+                                    string filename) {
+  mpTracker->mImSideLeft = imSideLeft.clone();
+  Sophus::SE3f Tcw1 = TrackStereo(imLeft,imRight,timestamp,vImuMeas,std::move(filename));
+  return Tcw1;
 }
 
 }  // namespace ORB_SLAM3

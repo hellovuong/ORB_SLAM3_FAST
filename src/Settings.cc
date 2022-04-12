@@ -133,7 +133,7 @@ cv::Mat Settings::readParameter<cv::Mat>(cv::FileStorage& fSettings,
   }
 }
 
-Settings::Settings(const std::string& configFile, const int& sensor)
+Settings::Settings(const std::string& configFile, const int& sensor, const bool is_multi)
     : bNeedToUndistort_(false),
       bNeedToRectify_(false),
       bNeedToResize1_(false),
@@ -160,6 +160,11 @@ Settings::Settings(const std::string& configFile, const int& sensor)
   if (sensor_ == System::STEREO || sensor_ == System::IMU_STEREO) {
     readCamera2(fSettings);
     cout << "\t-Loaded camera 2" << endl;
+  }
+
+  if(is_multi){
+    readCamera("Camera3", fSettings);
+    is_multi_ = is_multi;
   }
 
   // Read image info
@@ -334,10 +339,10 @@ void Settings::readCamera2(cv::FileStorage& fSettings) {
     float cx = readParameter<float>(fSettings, "Camera2.cx", found);
     float cy = readParameter<float>(fSettings, "Camera2.cy", found);
 
-    float k0 = readParameter<float>(fSettings, "Camera1.k1", found);
-    float k1 = readParameter<float>(fSettings, "Camera1.k2", found);
-    float k2 = readParameter<float>(fSettings, "Camera1.k3", found);
-    float k3 = readParameter<float>(fSettings, "Camera1.k4", found);
+    float k0 = readParameter<float>(fSettings, "Camera2.k1", found);
+    float k1 = readParameter<float>(fSettings, "Camera2.k2", found);
+    float k2 = readParameter<float>(fSettings, "Camera2.k3", found);
+    float k3 = readParameter<float>(fSettings, "Camera2.k4", found);
 
     vCalibration = {fx, fy, cx, cy, k0, k1, k2, k3};
 
@@ -713,4 +718,70 @@ ostream& operator<<(std::ostream& output, const Settings& settings) {
 
   return output;
 }
+void Settings::readCamera(const string& camera, cv::FileStorage& fSettings) {
+  bool found;
+  vector<float> vCalibration;
+  if (cameraType_ == PinHole) {
+    bNeedToRectify_ = true;
+
+    // Read intrinsic parameters
+    float fx = readParameter<float>(fSettings, camera+".fx", found);
+    float fy = readParameter<float>(fSettings, camera+".fy", found);
+    float cx = readParameter<float>(fSettings, camera+".cx", found);
+    float cy = readParameter<float>(fSettings, camera+".cy", found);
+
+    vCalibration = {fx, fy, cx, cy};
+
+    calibration2_ = new Pinhole(vCalibration);
+    originalCalib2_ = new Pinhole(vCalibration);
+
+    // Check if it is a distorted PinHole
+    readParameter<float>(fSettings, camera+".k1", found, false);
+    if (found) {
+      readParameter<float>(fSettings, camera+".k3", found, false);
+      if (found) {
+        vPinHoleDistorsion2_.resize(5);
+        vPinHoleDistorsion2_[4] =
+            readParameter<float>(fSettings, camera+".k3", found);
+      } else {
+        vPinHoleDistorsion2_.resize(4);
+      }
+      vPinHoleDistorsion2_[0] =
+          readParameter<float>(fSettings, camera+".k1", found);
+      vPinHoleDistorsion2_[1] =
+          readParameter<float>(fSettings, camera+".k2", found);
+      vPinHoleDistorsion2_[2] =
+          readParameter<float>(fSettings, camera+".p1", found);
+      vPinHoleDistorsion2_[3] =
+          readParameter<float>(fSettings, camera+".p2", found);
+    }
+  } else if (cameraType_ == KannalaBrandt) {
+    // Read intrinsic parameters
+    float fx = readParameter<float>(fSettings, camera+".fx", found);
+    float fy = readParameter<float>(fSettings, camera+".fy", found);
+    float cx = readParameter<float>(fSettings, camera+".cx", found);
+    float cy = readParameter<float>(fSettings, camera+".cy", found);
+
+    float k0 = readParameter<float>(fSettings, camera+".k1", found);
+    float k1 = readParameter<float>(fSettings, camera+".k2", found);
+    float k2 = readParameter<float>(fSettings, camera+".k3", found);
+    float k3 = readParameter<float>(fSettings, camera+".k4", found);
+
+    vCalibration = {fx, fy, cx, cy, k0, k1, k2, k3};
+
+    calibration3_ = new KannalaBrandt8(vCalibration);
+    originalCalib3_ = new KannalaBrandt8(vCalibration);
+
+    int colBegin =
+        readParameter<int>(fSettings, camera+".overlappingBegin", found);
+    int colEnd = readParameter<int>(fSettings, camera+".overlappingEnd", found);
+    vector<int> vOverlapping = {colBegin, colEnd};
+
+    static_cast<KannalaBrandt8*>(calibration3_)->mvLappingArea = vOverlapping;
+
+    cv::Mat cvTc1c3 = readParameter<cv::Mat>(fSettings,"Multi.T_c1_c3", found);
+    Tc1c3_ = Converter::toSophus(cvTc1c3);
+  }
+}
+bool Settings::isMulti() const { return is_multi_; }
 };  // namespace ORB_SLAM3
