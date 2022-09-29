@@ -34,7 +34,9 @@ Tracking timestats in ms (mean$\pm$std) with 1280X720 resolution of ZED2 camera:
 
 --->Total Tracking: 21.25452$\pm$2.58791
 
+### TODO List
 
+- [ ] Add DBoW3
 
 ### V1.0, December 22th, 2021
 **Authors:** Carlos Campos, Richard Elvira, Juan J. Gómez Rodríguez, [José M. M. Montiel](http://webdiis.unizar.es/~josemari/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/).
